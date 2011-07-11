@@ -10,17 +10,26 @@ class TestElements < Test::Unit::TestCase
   end
   
   def test_push_element
+    results = []
     p = Blossom::PushElement.new(:r,0,[]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
-        [inp[0]*2] 
+        results << [inp[0]*2] 
       else
-        [-1]
+        results << [-1]
       end
     end
-    assert_equal([4], p.insert([2]))
-    assert_equal([-1], p.insert([1]))
-    assert_equal([-1], p.insert([:a]))
-    assert_equal(nil, p.insert(nil))
+    p.insert([2])
+    p.flush
+    assert_equal([4], results.pop)
+    p.insert([1])
+    p.flush
+    assert_equal([-1], results.pop)
+    p.insert([:a])
+    p.flush
+    assert_equal([-1], results.pop)
+    p.insert(nil)
+    p.flush
+    assert_equal(nil, results.pop)
   end
   
   def test_pull_itemset

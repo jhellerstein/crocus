@@ -1,5 +1,7 @@
 require 'crocus/elements'
 
+BUFSIZE = 1000
+
 class Blossom
   class EddyItemSet
     # and ItemSet is a set of (possibly partially empty) result tuple-arrays, which
@@ -36,9 +38,9 @@ class Blossom
         # key = @key.map{|i| item.item[item.source_id][i]}
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
-          key = key_cols.map{|i| subitem[i]}          
-          @items[key] ||= []
-          @items[key] << subitem
+          # key = key_cols.map{|i| subitem[i]}          
+          key = key_cols.nil? ? [] : [subitem[key_cols[0]]]
+          (@items[key] ||= []) << subitem
         end
         @blk.call(itemset)
       else
@@ -47,14 +49,14 @@ class Blossom
         newitems = []
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
-          key = key_cols.nil? ? [] : key_cols.map{|i| subitem[i]} 
+          # key = key_cols.nil? ? [] : key_cols.map{|i| subitem[i]} 
+          key = key_cols.nil? ? [] : [subitem[key_cols[0]]]
           matches = @items[key]
           unless matches.nil?
             matches.each do |i|
-              item.delete_at @my_id
-              item.insert(@my_id,i.flatten)
+              item[@my_id] = i
               newitem = item.clone
-              newitems << item.clone
+              newitems << newitem
             end
           end
         end 
@@ -69,7 +71,7 @@ class Blossom
   end
 
   class PushEddy < PushElement
-    attr_reader :id_to_name, :name_to_id, :all_on, :init_ready, :name_to_preds
+    attr_reader :id_to_name, :name_to_id, :all_on, :init_ready, :id_to_preds
     attr_accessor :curid
     # innies is an array of PushElements that push back to the Eddy
     # preds is an array of attribute pairs of the form [[push_elem, key], [push_elem, key]]
@@ -82,7 +84,8 @@ class Blossom
       @name_to_id = {}
       @curid = 0
       @blk = blk
-      @name_to_preds = {}
+      @id_to_preds = {}
+      @ids = (0..@inputs.length-1) # precompute this outside the insert path!
       
       counts = @inputs.reduce({}) do |memo,i|
         memo[i.name] ||= 0
@@ -92,14 +95,18 @@ class Blossom
       counts = counts.map{|k,v| k if v > 1}.compact
       raise "duplicated input names #{counts.inspect} in Eddy initializer" if counts.length > 0
       
-      # set self.route to be the continuation blk for each input
-      @inputs.each { |i| i.set_block { |item| self.insert(item, i) } }
-      
-      # keep track of the inputs we haven't made a stem for yet
+      @input_bufs = {}
       inputs_left = {}
-      @inputs.each do |i| 
-        inputs_left[i.name] ||= []
-        inputs_left[i.name] << i
+      @all_on = 0
+      @inputs.each_with_index do |inp, i| 
+        # set up a buffer for each input
+        @input_bufs[i] = []     
+        # set self.route to be the continuation blk for each input
+        inp.set_block { |item| self.insert(item, inp) }
+        # keep track of the inputs we haven't made a stem for yet
+        (inputs_left[inp.name] ||= []) << inp
+        # add up all the input bits
+        @all_on += 2**i
       end
       
       # for each pred, make sure we have an appropriately-keyed stem
@@ -108,10 +115,8 @@ class Blossom
         inputs_left[l[0].name].pop
         register_stem(r[0].name, r[0].arity, r[1])
         inputs_left[r[0].name].pop
-        name_to_preds[l[0].name] ||= []
-        name_to_preds[l[0].name] << [2**name_to_id[r[0].name], r[1]]
-        name_to_preds[r[0].name] ||= []
-        name_to_preds[r[0].name] << [2**name_to_id[l[0].name], l[1]]
+        (id_to_preds[name_to_id[l[0].name]] ||= []) << [2**name_to_id[r[0].name], r[1]]
+        (id_to_preds[name_to_id[r[0].name]] ||= []) << [2**name_to_id[l[0].name], l[1]]
       end
       
       # any inputs that are left will have a stem that we'll need to scan
@@ -120,27 +125,51 @@ class Blossom
           register_stem(i.name, i.arity, []) # empty key will hash all entries together on nil
         end
       end      
-      (0..@stems.length-1).each {|i| @all_on ||= 0; @all_on += 2**i}
     end   
     
     def register_stem(name, arity, key)
       return if @name_to_id[name]
       @id_to_name[@curid] = name
       @name_to_id[name] = @curid
-      @stems[name] ||= []
-      @stems[name] << Stem.new(name,arity,key,self) do |item|
+      (@stems[@curid] ||= []) << Stem.new(name,arity,key,self) do |item|
         self.route(item)
       end
       @curid += 1
     end
+    
+    def flush
+      found = true
+      while found
+        found = false
+        @input_bufs.each do |id, buf| 
+          if buf.length > 0
+            found = true
+            flush_buf(buf, @inputs[id])
+          end
+        end
+      end
+    end
+          
       
-    def insert(item, source) 
-      # convert inbound singleton into outbound format
-      item = @inputs.map.with_index{|inp, i| source.name == id_to_name[i] ? item : []}
-      itemset = EddyItemSet.new([item], source.name, name_to_id[source.name], @stems)
+    def flush_buf(buf, source)
+      source_id = name_to_id[source.name]
+      itemset = EddyItemSet.new(buf, source.name, source_id, @stems)
+      @input_bufs[source_id] = []
       # puts "created EddyItem #{item.inspect}"
       # and route
       route(itemset)
+    end
+    
+    def insert(item, source) 
+      # convert inbound singleton into outbound format
+      source_id = name_to_id[source.name]
+      newitem = Array.new(@inputs.length)
+      newitem[source_id] = item
+      buf = @input_bufs[source_id]
+      buf << newitem
+      if (item.length >= BUFSIZE)
+        flush_buf(buf, source)
+      end
     end
     
     def choose_route(itemset)
@@ -156,9 +185,9 @@ class Blossom
        # here's where the interesting routing should go
        # but for now all we'll do is find the first stem that's ready
        n = nil
-       (0..@id_to_name.length-1).each do |i| 
+       @ids.each do |i| 
          if itemset.ready & 2**i != 0
-           n = @stems[@id_to_name[i]][0]
+           n = @stems[i][0]
            raise "n is nil, #{@id_to_name[i]}" if n.nil?
            break
          end
@@ -168,7 +197,7 @@ class Blossom
     
     def route(itemset)
       return if itemset.nil?
-      raise "item from unknown source #{itemset.source_name}" if @name_to_id[itemset.source_name].nil?
+      # raise "item from unknown source #{itemset.source_name}" if @name_to_id[itemset.source_name].nil?
       # puts "item.done = #{item.done}, @inputs.length = #{@inputs.length}"
       if itemset.done == @all_on
         raise "orphaned stuff in ready: #{itemset.ready.inspect}" unless itemset.ready == 0
@@ -181,9 +210,9 @@ class Blossom
       itemset.ready = @all_on - itemset.done if itemset.ready == 0
       # choose dest
       n = choose_route(itemset)
+      preds = id_to_preds[n.my_id] 
       if itemset.source_id != n.my_id
-        entry = @name_to_preds[n.name]
-        key_cols = entry.first[1] unless entry.nil? # so far we only handle on a single join pred!
+        key_cols = preds.first[1] unless preds.nil? # so far we only handle on a single join pred!
         # key = key_cols.nil? ? [] : key.map{|i| item.item[item.source_id][i]}
         # puts "routing #{item.item.inspect} from #{item.source_name} to Stem #{n.name} with lookup key #{key_cols}"
       else
@@ -193,13 +222,13 @@ class Blossom
       end
 
       # flip the bits to what they should be AFTER this insert
-      preds = name_to_preds[n.name] 
       itemset.ready -= n.my_bit
       unless preds.nil?
         preds.each {|i| itemset.ready += i[0] if (itemset.ready & i[0] == 0) and (itemset.done & i[0] == 0)}
       end
       itemset.done += n.my_bit 
               
+      key_cols = nil if key_cols == []
       n.insert(itemset, key_cols)
     end
   end

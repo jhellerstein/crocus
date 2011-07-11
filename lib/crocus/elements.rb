@@ -57,6 +57,8 @@ class Blossom
     def <<(i)
       insert(i)
     end
+    def flush
+    end
     undef to_enum
   end
 end

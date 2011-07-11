@@ -12,7 +12,8 @@ class TestEddies < Test::Unit::TestCase
     s.insert([:b,1])
     r.insert([2,:c])
     s.insert([:d,2])
-    assert_equal([[1, :a, :b, 1],[2, :c, :d, 2]], outs)      
+    r.flush; s.flush; e.flush
+    assert_equal([[1, :a, :b, 1],[2, :c, :d, 2]], outs.sort)      
   end
   
   def test_unary
@@ -22,6 +23,7 @@ class TestEddies < Test::Unit::TestCase
       outs << i.flatten
     end
     r.insert([1,:a])
+    r.flush; e.flush
     assert_equal([[1, :a]], outs)      
   end  
    
@@ -38,7 +40,8 @@ class TestEddies < Test::Unit::TestCase
     end
     r.insert([1,:a])
     r.insert([2,:b])
-    assert_equal([[1, :a, 1, :a], [2, :b, 2, :b]], outs)
+    r.flush; r1.flush; r2.flush; e.flush
+    assert_equal([[1, :a, 1, :a], [2, :b, 2, :b]], outs.sort)
   end
   
   def test_cross_product
@@ -53,7 +56,8 @@ class TestEddies < Test::Unit::TestCase
     s.insert([1,:b])
     s.insert([2,:c])
     r.insert([3,:d])
-    assert_equal([[1, :a, 1, :b], [1, :a, 2, :c], [3, :d, 1, :b], [3, :d, 2, :c]], outs)
+    r.flush; s.flush; e.flush
+    assert_equal([[1, :a, 1, :b], [1, :a, 2, :c], [3, :d, 1, :b], [3, :d, 2, :c]], outs.sort)
   end
   
   def test_ternary_join
@@ -70,13 +74,14 @@ class TestEddies < Test::Unit::TestCase
     r.insert([2,:a])
     s.insert([2,:b])
     t.insert([2,:c])
-    assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs)
-  end
-  
-  def test_avoid_cross_product
+    r.flush; s.flush; t.flush; e.flush
+    assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs.sort)
   end
   
   def test_multiple_join_preds
+  end
+  
+  def test_selection_preds
   end
 end
     
