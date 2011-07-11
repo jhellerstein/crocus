@@ -1,0 +1,660 @@
+Loaded suite /usr/local/rvm/gems/ruby-1.9.2-p180/bin/ruby-prof
+Started
+1M pulls: 36.397089 elapsed
+.1M pushes: 20.318247 elapsed
+.1M unary eddy pushes: 253.923679 elapsed
+.
+Finished in 310.641259 seconds.
+
+3 tests, 0 assertions, 0 failures, 0 errors, 0 skips
+
+Test run options: --seed 5475
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title>ruby-prof call tree</title>
+<style type="text/css">
+<!--
+body {
+    font-size:70%;
+    padding:0px;
+    margin:5px;
+    margin-right:0px;
+    margin-left:0px;
+    background: #ffffff;
+}
+ul {
+    margin-left:0px;
+    margin-top:0px;
+    margin-bottom:0px;
+    padding-left:0px;
+    list-style-type:none;
+}
+li {
+    margin-left:11px;
+    padding:0px;
+    white-space:nowrap;
+    border-top:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-bottom:none;
+}
+.thread {
+    margin-left:11px;
+    background:#708090;
+    padding-top:3px;
+    padding-left:12px;
+    padding-bottom:2px;
+    border-left:1px solid #CCCCCC;
+    border-top:1px solid #CCCCCC;
+    font-weight:bold;
+}
+.hidden {
+    display:none;
+    width:0px;
+    height:0px;
+    margin:0px;
+    padding:0px;
+    border-style:none;
+}
+.color01 { background:#adbdeb }
+.color05 { background:#9daddb }
+.color0 { background:#8d9dcb }
+.color1 { background:#89bccb }
+.color2 { background:#56e3e7 }
+.color3 { background:#32cd70 }
+.color4 { background:#a3d53c }
+.color5 { background:#c4cb34 }
+.color6 { background:#dcb66d }
+.color7 { background:#cda59e }
+.color8 { background:#be9d9c }
+.color9 { background:#cf947a }
+#commands {
+    font-size:10pt;
+    padding:10px;
+    margin-left:11px;
+    margin-bottom:0px;
+    margin-top:0px;
+    background:#708090;
+    border-top:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-bottom:none;
+}
+#titlebar {
+    font-size:10pt;
+    padding:10px;
+    margin-left:11px;
+    margin-bottom:0px;
+    margin-top:10px;
+    background:#8090a0;
+    border-top:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-bottom:none;
+}
+#help {
+    font-size:10pt;
+    padding:10px;
+    margin-left:11px;
+    margin-bottom:0px;
+    margin-top:0px;
+    background:#8090a0;
+    display:none;
+    border-top:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-bottom:none;
+}
+#sentinel {
+    height: 400px;
+    margin-left:11px;
+    background:#8090a0;
+    border-top:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-bottom:none;
+ }
+input { margin-left:10px; }
+-->
+</style>
+<script type="text/javascript">
+/*
+   Copyright (C) 2005,2009  Stefan Kaes
+   skaes@railsexpress.de
+*/
+
+function rootNode() {
+  return currentThread;
+}
+
+function hideUL(node) {
+  var lis = node.childNodes
+  var l = lis.length;
+  for (var i=0; i < l ; i++ ) {
+    hideLI(lis[i]);
+  }
+}
+
+function showUL(node) {
+  var lis = node.childNodes;
+  var l = lis.length;
+  for (var i=0; i < l ; i++ ) {
+    showLI(lis[i]);
+  }
+}
+
+function findUlChild(li){
+  var ul = li.childNodes[2];
+  while (ul && ul.nodeName != "UL") {
+    ul = ul.nextSibling;
+  }
+  return ul;
+}
+
+function isLeafNode(li) {
+  var img = li.firstChild;
+  return (img.src.indexOf('empty.png') > -1);
+}
+
+function hideLI(li) {
+  if (isLeafNode(li))
+    return;
+
+  var img = li.firstChild;
+  img.src = 'plus.png';
+
+  var ul = findUlChild(li);
+  if (ul) {
+    ul.style.display = 'none';
+    hideUL(ul);
+  }
+}
+
+function showLI(li) {
+  if (isLeafNode(li))
+    return;
+
+  var img = li.firstChild;
+  img.src = 'minus.png';
+
+  var ul = findUlChild(li);
+  if (ul) {
+    ul.style.display = 'block';
+    showUL(ul);
+  }
+}
+
+function toggleLI(li) {
+  var img = li.firstChild;
+  if (img.src.indexOf("minus.png")>-1)
+    hideLI(li);
+  else {
+    if (img.src.indexOf("plus.png")>-1)
+      showLI(li);
+  }
+}
+
+function aboveThreshold(text, threshold) {
+  var match = text.match(/\d+[.,]\d+/);
+  return (match && parseFloat(match[0].replace(/,/, '.'))>=threshold);
+}
+
+function setThresholdLI(li, threshold) {
+  var img = li.firstChild;
+  var text = img.nextSibling;
+  var ul = findUlChild(li);
+
+  var visible = aboveThreshold(text.nodeValue, threshold) ? 1 : 0;
+
+  var count = 0;
+  if (ul) {
+    count = setThresholdUL(ul, threshold);
+  }
+  if (count>0) {
+    img.src = 'minus.png';
+  }
+  else {
+    img.src = 'empty.png';
+  }
+  if (visible) {
+    li.style.display = 'block'
+  }
+  else {
+    li.style.display = 'none'
+  }
+  return visible;
+}
+
+function setThresholdUL(node, threshold) {
+  var lis = node.childNodes;
+  var l = lis.length;
+
+  var count = 0;
+  for ( var i = 0; i < l ; i++ ) {
+    count = count + setThresholdLI(lis[i], threshold);
+  }
+
+  var visible = (count > 0) ? 1 : 0;
+  if (visible) {
+    node.style.display = 'block';
+  }
+  else {
+    node.style.display = 'none';
+  }
+  return visible;
+}
+
+function toggleChildren(img, event) {
+  event.cancelBubble=true;
+
+  if (img.src.indexOf('empty.png') > -1)
+    return;
+
+  var minus = (img.src.indexOf('minus.png') > -1);
+
+  if (minus) {
+    img.src = 'plus.png';
+  }
+  else
+    img.src = 'minus.png';
+
+  var li = img.parentNode;
+  var ul = findUlChild(li);
+  if (ul) {
+    if (minus)
+      ul.style.display = 'none';
+    else
+      ul.style.display = 'block';
+  }
+  if (minus)
+    moveSelectionIfNecessary(li);
+}
+
+function showChildren(li) {
+  var img = li.firstChild;
+  if (img.src.indexOf('empty.png') > -1)
+    return;
+  img.src = 'minus.png';
+
+  var ul = findUlChild(li);
+  if (ul) {
+    ul.style.display = 'block';
+  }
+}
+
+function setThreshold() {
+ var tv = document.getElementById("threshold").value;
+ if (tv.match(/[0-9]+([.,][0-9]+)?/)) {
+   var f = parseFloat(tv.replace(/,/, '.'));
+   var threads = document.getElementsByName("thread");
+   var l = threads.length;
+   for ( var i = 0; i < l ; i++ ) {
+     setThresholdUL(threads[i], f);
+   }
+   var p = selectedNode;
+   while (p && p.style.display=='none')
+     p=p.parentNode.parentNode;
+   if (p && p.nodeName=="LI")
+    selectNode(p);
+ }
+ else {
+   alert("Please specify a decimal number as threshold value!");
+ }
+}
+
+function collapseAll(event) {
+  event.cancelBubble=true;
+  var threads = document.getElementsByName("thread");
+  var l = threads.length;
+  for ( var i = 0; i < l ; i++ ) {
+    hideUL(threads[i]);
+  }
+  selectNode(rootNode(), null);
+}
+
+function expandAll(event) {
+  event.cancelBubble=true;
+  var threads = document.getElementsByName("thread");
+  var l = threads.length;
+  for ( var i = 0; i < l ; i++ ) {
+    showUL(threads[i]);
+  }
+}
+
+function toggleHelp(node) {
+  var help = document.getElementById("help");
+  if (node.value == "Show Help") {
+    node.value = "Hide Help";
+    help.style.display = 'block';
+  }
+  else {
+    node.value = "Show Help";
+    help.style.display = 'none';
+  }
+}
+
+var selectedNode = null;
+var selectedColor = null;
+var selectedThread = null;
+
+function descendentOf(a,b){
+  while (a!=b && b!=null)
+    b=b.parentNode;
+  return (a==b);
+}
+
+function moveSelectionIfNecessary(node){
+  if (descendentOf(node, selectedNode))
+    selectNode(node, null);
+}
+
+function selectNode(node, event) {
+  if (event) {
+    event.cancelBubble = true;
+    thread = findThread(node);
+    selectThread(thread);
+  }
+  if (selectedNode) {
+    selectedNode.style.background = selectedColor;
+  }
+  selectedNode = node;
+  selectedColor = node.style.background;
+  selectedNode.style.background = "red";
+  selectedNode.scrollIntoView();
+  window.scrollBy(0,-400);
+}
+
+function moveUp(){
+  var p = selectedNode.previousSibling;
+  while (p && p.style.display == 'none')
+    p = p.previousSibling;
+  if (p && p.nodeName == "LI") {
+    selectNode(p, null);
+  }
+}
+
+function moveDown(){
+  var p = selectedNode.nextSibling;
+  while (p && p.style.display == 'none')
+    p = p.nextSibling;
+  if (p && p.nodeName == "LI") {
+    selectNode(p, null);
+  }
+}
+
+function moveLeft(){
+  var p = selectedNode.parentNode.parentNode;
+  if (p && p.nodeName=="LI") {
+    selectNode(p, null);
+  }
+}
+
+function moveRight(){
+  if (!isLeafNode(selectedNode)) {
+    showChildren(selectedNode);
+    var ul = findUlChild(selectedNode);
+    if (ul) {
+      selectNode(ul.firstChild, null);
+    }
+  }
+}
+
+function moveForward(){
+  if (isLeafNode(selectedNode)) {
+    var p = selectedNode;
+    while ((p.nextSibling == null || p.nextSibling.style.display=='none') && p.nodeName=="LI") {
+      p = p.parentNode.parentNode;
+    }
+    if (p.nodeName=="LI")
+      selectNode(p.nextSibling, null);
+  }
+  else {
+    moveRight();
+  }
+}
+
+function isExpandedNode(li){
+  var img = li.firstChild;
+  return(img.src.indexOf('minus.png')>-1);
+}
+
+function moveBackward(){
+  var p = selectedNode;
+  var q = p.previousSibling;
+  while (q != null && q.style.display=='none')
+    q = q.previousSibling;
+  if (q == null) {
+    p = p.parentNode.parentNode;
+  } else {
+    while (!isLeafNode(q) && isExpandedNode(q)) {
+      q = findUlChild(q).lastChild;
+      while (q.style.display=='none')
+        q = q.previousSibling;
+    }
+    p = q;
+  }
+  if (p.nodeName=="LI")
+    selectNode(p, null);
+}
+
+function moveHome() {
+  selectNode(currentThread);
+}
+
+var currentThreadIndex = null;
+
+function findThread(node){
+  while (node && node.parentNode.nodeName!="BODY") {
+    node = node.parentNode;
+  }
+  return node.firstChild;
+}
+
+function selectThread(node){
+  var threads = document.getElementsByName("thread");
+  currentThread = node;
+  for (var i=0; i<threads.length; i++) {
+    if (threads[i]==currentThread.parentNode)
+      currentThreadIndex = i;
+  }
+}
+
+function nextThread(){
+  var threads = document.getElementsByName("thread");
+  if (currentThreadIndex==threads.length-1)
+    currentThreadIndex = 0;
+  else
+    currentThreadIndex += 1
+  currentThread = threads[currentThreadIndex].firstChild;
+  selectNode(currentThread, null);
+}
+
+function previousThread(){
+  var threads = document.getElementsByName("thread");
+  if (currentThreadIndex==0)
+    currentThreadIndex = threads.length-1;
+  else
+    currentThreadIndex -= 1
+  currentThread = threads[currentThreadIndex].firstChild;
+  selectNode(currentThread, null);
+}
+
+function switchThread(node, event){
+  event.cancelBubble = true;
+  selectThread(node.nextSibling.firstChild);
+  selectNode(currentThread, null);
+}
+
+function handleKeyEvent(event){
+  var code = event.charCode ? event.charCode : event.keyCode;
+  var str = String.fromCharCode(code);
+  switch (str) {
+    case "a": moveLeft();  break;
+    case "s": moveDown();  break;
+    case "d": moveRight(); break;
+    case "w": moveUp();    break;
+    case "f": moveForward(); break;
+    case "b": moveBackward(); break;
+    case "x": toggleChildren(selectedNode.firstChild, event); break;
+    case "*": toggleLI(selectedNode); break;
+    case "n": nextThread(); break;
+    case "h": moveHome(); break;
+    case "p": previousThread(); break;
+  }
+}
+document.onkeypress=function(event){ handleKeyEvent(event) };
+
+window.onload=function(){
+  var images = document.getElementsByTagName("img");
+  for (var i=0; i<images.length; i++) {
+    var img = images[i];
+    if (img.className == "toggle") {
+      img.onclick = function(event){ toggleChildren(this, event); };
+    }
+  }
+  var divs = document.getElementsByTagName("div");
+  for (i=0; i<divs.length; i++) {
+    var div = divs[i];
+    if (div.className == "thread")
+      div.onclick = function(event){ switchThread(this, event) };
+  }
+  var lis = document.getElementsByTagName("li");
+  for (var i=0; i<lis.length; i++) {
+    lis[i].onclick = function(event){ selectNode(this, event); };
+  }
+  var threads = document.getElementsByName("thread");
+  currentThreadIndex = 0;
+  currentThread = threads[0].firstChild;
+  selectNode(currentThread, null);
+}
+</script>
+</head><body>
+<div id="titlebar">
+Call tree for application <b>/usr/local/rvm/gems/ruby-1.9.2-p180/bin/ruby-prof </b><br/>
+Generated on 2011-07-08 13:36:47 -0400 with options {:min_percent=&gt;0}<br/>
+</div>
+<div id="commands">
+<span style="font-size: 11pt; font-weight: bold;">Threshold:</span>
+<input value="1.0" size="3" id="threshold" type="text">
+<input value="Apply" onclick="setThreshold();" type="submit">
+<input value="Expand All" onclick="expandAll(event);" type="submit">
+<input value="Collapse All" onclick="collapseAll(event);" type="submit">
+<input value="Show Help" onclick="toggleHelp(this);" type="submit">
+</div>
+<div style="display: none;" id="help">
+<img src="empty.png"> Enter a decimal value <i>d</i> into the threshold field and click "Apply"
+to hide all nodes marked with time values lower than <i>d</i>.<br>
+<img src="empty.png"> Click on "Expand All" for full tree expansion.<br>
+<img src="empty.png"> Click on "Collapse All" to show only top level nodes.<br>
+<img src="empty.png"> Use a, s, d, w as in Quake or Urban Terror to navigate the tree.<br>
+<img src="empty.png"> Use f and b to navigate the tree in preorder forward and backwards.<br>
+<img src="empty.png"> Use x to toggle visibility of a subtree.<br>
+<img src="empty.png"> Use * to expand/collapse a whole subtree.<br>
+<img src="empty.png"> Use h to navigate to thread root.<br>
+<img src="empty.png"> Use n and p to navigate between threads.<br>
+<img src="empty.png"> Click on background to move focus to a subtree.<br>
+</div>
+<div class="thread">Thread: 2151955260 (100.00% ~ 0.047238999999999996)</div><ul name="thread"><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 99.99% (99.99%) <a href="txmt://open?url=file:///usr/local/rvm/gems/ruby-1.9.2-p180/gems/ruby-prof-0.10.8/bin/ruby-prof&line=234">Global#[No method]</a> [1 calls, 2 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 99.94% (99.96%) Kernel#load [1 calls, 1 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 97.53% (97.59%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems/custom_require.rb&line=34">Kernel#require</a> [1 calls, 18 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 97.48% (99.95%) Kernel#gem_original_require [1 calls, 18 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 96.96% (99.47%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems/custom_require.rb&line=34">Kernel#require</a> [3 calls, 18 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 96.89% (99.92%) Kernel#gem_original_require [3 calls, 18 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 93.64% (96.65%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems/custom_require.rb&line=34">Kernel#require</a> [7 calls, 18 total]
+<ul><li class="color9" style="display:block"><img class="toggle" src="minus.png"> 93.46% (99.81%) Kernel#gem_original_require [7 calls, 18 total]
+<ul><li class="color3" style="display:block"><img class="toggle" src="minus.png"> 38.03% (40.70%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems/custom_require.rb&line=34">Kernel#require</a> [6 calls, 18 total]
+<ul><li class="color3" style="display:block"><img class="toggle" src="minus.png"> 37.87% (99.56%) Kernel#gem_original_require [6 calls, 18 total]
+<ul><li class="color05" style="display:block"><img class="toggle" src="minus.png"> 10.80% (28.53%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems/custom_require.rb&line=34">Kernel#require</a> [1 calls, 18 total]
+<ul><li class="color05" style="display:block"><img class="toggle" src="minus.png"> 10.76% (99.61%) Kernel#gem_original_require [1 calls, 18 total]
+<ul><li class="color01" style="display:block"><img src="empty.png"> 1.41% (13.12%) Hash#default [477 calls, 1003625 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.18% (1.67%) Module#attr_reader [5 calls, 9 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.04% (21.18%) Module#method_added [12 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.09% (0.83%) Module#method_added [31 calls, 218 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.20%) Class#inherited [6 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.18%) IO#set_encoding [2 calls, 24 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.08%) BasicObject#singleton_method_added [2 calls, 19 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.10%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems.rb&line=325">&lt;Module::Gem&gt;#unresolved_deps</a> [1 calls, 18 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.06%) Hash#empty? [1 calls, 18 total]
+</li></ul></li><li class="color01" style="display:block"><img src="empty.png"> 2.98% (7.87%) Hash#default [951 calls, 1003625 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.23% (0.61%) Array#each [2 calls, 1000030 total]
+<ul style="display:none"><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.17% (74.31%) Module#class_eval [10 calls, 10 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.03% (16.05%) Module#method_added [10 calls, 218 total]
+</li></ul></li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.10% (0.27%) Module#method_added [34 calls, 218 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.10% (0.26%) Module#attr_reader [2 calls, 9 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (15.22%) Module#method_added [4 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.08% (0.21%) Regexp#=== [1 calls, 357 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.07% (0.20%) Module#include [3 calls, 6 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.04% (57.14%) Module#append_features [3 calls, 6 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (11.43%) Module#included [3 calls, 6 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.05% (0.12%) Array#pack [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.04% (0.12%) Module#attr_accessor [1 calls, 5 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (19.05%) BasicObject#singleton_method_added [2 calls, 19 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.04% (0.10%) Kernel#inspect [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.03% (0.08%) IO#set_encoding [4 calls, 24 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.03% (0.07%) Module#module_function [1 calls, 1 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (23.08%) BasicObject#singleton_method_added [1 calls, 19 total]
+</li></ul></li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.02% (0.06%) Class#new [1 calls, 5000030 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (30.00%) &lt;Class::BasicObject&gt;#allocate [1 calls, 3000022 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (30.00%) BasicObject#initialize [1 calls, 3 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.04%) BasicObject#singleton_method_added [4 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.04%) Class#inherited [5 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.03%) Fixnum#&lt;&lt; [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.02%) Fixnum#to_s [1 calls, 2 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.02%) Module#method_undefined [1 calls, 8 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.01%) Module#private [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.01%) Bignum#- [1 calls, 1 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.04% (0.11%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems.rb&line=325">&lt;Module::Gem&gt;#unresolved_deps</a> [6 calls, 18 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.04%) Hash#empty? [6 calls, 18 total]
+</li></ul></li><li class="color05" style="display:block"><img src="empty.png"> 6.17% (6.60%) Hash#default [2008 calls, 1003625 total]
+</li><li class="color01" style="display:block"><img class="toggle" src="plus.png"> 2.58% (2.77%) Enumerable#grep [1 calls, 5 total]
+<ul style="display:none"><li class="color01" style="display:block"><img class="toggle" src="plus.png"> 2.57% (99.59%) Array#each [1 calls, 1000030 total]
+<ul style="display:none"><li class="color01" style="display:block"><img class="toggle" src="empty.png"> 1.83% (71.05%) Array#include? [12 calls, 1000013 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.92% (50.12%) String#== [439 calls, 439 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.18% (6.99%) Regexp#=== [46 calls, 357 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.17% (6.41%) Module#alias_method [9 calls, 9 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.03% (15.38%) Module#method_added [9 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.06% (2.47%) String#[] [12 calls, 12 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.03% (1.23%) String#to_s [12 calls, 12 total]
+</li></ul></li></ul></li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.32% (0.34%) Array#map [1 calls, 1000004 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.12% (38.00%) Symbol#to_s [46 calls, 49 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.25% (0.27%) Module#method_added [94 calls, 218 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.22% (0.23%) Module#attr_accessor [4 calls, 5 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.04% (18.45%) Module#method_added [16 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.10% (0.10%) IO#set_encoding [10 calls, 24 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.09% (0.09%) Module#include [3 calls, 6 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.04% (51.22%) Module#append_features [3 calls, 6 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (9.76%) Module#included [3 calls, 6 total]
+</li></ul></li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.07% (0.08%) Module#attr_reader [2 calls, 9 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (20.59%) Module#method_added [4 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.06% (0.07%) Module#instance_methods [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.04% (0.04%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/1.9.1/minitest/unit.rb&line=726">&lt;Class::MiniTest::Unit::TestCase&gt;#inherited</a> [1 calls, 2 total]
+<ul style="display:none"><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.02% (57.89%) Hash#[]= [1 calls, 3000017 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.02% (72.73%) Kernel#hash [1 calls, 5000047 total]
+</li></ul></li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.03% (0.03%) &lt;Module::Signal&gt;#list [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) Class#inherited [8 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) BasicObject#singleton_method_added [9 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) Module#method_undefined [7 calls, 8 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/1.9.1/minitest/unit.rb&line=720">&lt;Class::MiniTest::Unit::TestCase&gt;#reset</a> [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) &lt;Class::File&gt;#expand_path [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) &lt;Class::File&gt;#dirname [2 calls, 3 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.04% (0.05%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems.rb&line=325">&lt;Module::Gem&gt;#unresolved_deps</a> [7 calls, 18 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) Hash#empty? [7 calls, 18 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.35% (0.36%) Hash#default [108 calls, 1003625 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.04% (0.04%) IO#set_encoding [4 calls, 24 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.02% (0.02%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/1.9.1/minitest/unit.rb&line=497">&lt;Class::MiniTest::Unit&gt;#autorun</a> [1 calls, 2 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.01% (27.27%) Kernel#at_exit [1 calls, 2 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.00%) BasicObject#singleton_method_added [1 calls, 19 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.00%) Module#method_added [1 calls, 218 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.02%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems.rb&line=325">&lt;Module::Gem&gt;#unresolved_deps</a> [3 calls, 18 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.00%) Hash#empty? [3 calls, 18 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) Hash#default [6 calls, 1003625 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) IO#set_encoding [2 calls, 24 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) &lt;Class::File&gt;#join [1 calls, 1 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) &lt;Class::File&gt;#dirname [1 calls, 3 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) Array#unshift [1 calls, 1 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/site_ruby/1.9.1/rubygems.rb&line=325">&lt;Module::Gem&gt;#unresolved_deps</a> [1 calls, 18 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.00% (0.00%) Hash#empty? [1 calls, 18 total]
+</li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.25% (0.25%) Hash#default [66 calls, 1003625 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.03% (0.03%) &lt;Class::Range&gt;#allocate [4 calls, 4 total]
+</li><li class="color01" style="display:none"><img src="empty.png"> 0.02% (0.02%) IO#set_encoding [2 calls, 24 total]
+</li><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.02% (0.02%) <a href="txmt://open?url=file:///usr/local/rvm/rubies/ruby-1.9.2-p180/lib/ruby/1.9.1/minitest/unit.rb&line=726">&lt;Class::MiniTest::Unit::TestCase&gt;#inherited</a> [1 calls, 2 total]
+<ul style="display:none"><li class="color01" style="display:none"><img class="toggle" src="empty.png"> 0.01% (55.56%) Hash#[]= [1 calls, 3000017 total]
+<ul style="display:none"><li class="color01" style="display:none"><img src="empty.png"> 0.00% (20.00%) Kernel#hash [1 calls, 5000047 total]
+</li></ul></li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) Module#method_added [3 calls, 218 total]
+</li></ul></li></ul></li><li class="color01" style="display:none"><img src="empty.png"> 0.01% (0.01%) <a href="txmt://open?url=file:///usr/local/rvm/gems/ruby-1.9.2-p180/gems/ruby-prof-0.10.8/bin/ruby-prof&line=234">Global#[No method]</a> [1 calls, 2 total]
+</li></ul><div id="sentinel"></div></body></html>
