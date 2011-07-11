@@ -1,4 +1,4 @@
-class Blossom
+class Crocus
   # pattern taken from 
   # http://en.wikibooks.org/wiki/Ruby_Programming/Reference/Objects/Enumerable#Lazy_evaluation
   # Usage example:

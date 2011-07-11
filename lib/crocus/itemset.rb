@@ -1,6 +1,6 @@
 require 'set'
 
-class Blossom
+class Crocus
   class ItemSet < Set
     def initialize(name, arity, pkey, enum=nil, &block)
       @name = name

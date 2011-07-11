@@ -2,7 +2,7 @@ require './test_common.rb'
 
 class TestElements < Test::Unit::TestCase
   def test_pull_element
-    e = Blossom::PullElement.new(:p, 0, (1..1000000000))
+    e = Crocus::PullElement.new(:p, 0, (1..1000000000))
     i = e.to_enum do |out, inp|
       out.yield inp if inp.class <= Numeric and inp%2 == 0
     end
@@ -11,7 +11,7 @@ class TestElements < Test::Unit::TestCase
   
   def test_push_element
     results = []
-    p = Blossom::PushElement.new(:r,0,[]) do |inp|
+    p = Crocus::PushElement.new(:r,0,[]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         results << [inp[0]*2] 
       else
@@ -33,11 +33,11 @@ class TestElements < Test::Unit::TestCase
   end
   
   def test_pull_itemset
-    it = Blossom::ItemSet.new(:r,2,[0])
+    it = Crocus::ItemSet.new(:r,2,[0])
     (0..1000).each do |i|
       it << [i,i+1]
     end
-    e = Blossom::PullElement.new(:p, 0, it)
+    e = Crocus::PullElement.new(:p, 0, it)
     i = e.to_enum do |out, inp|
       out.yield inp if inp.class <= Array and inp[0].class <= Numeric and inp[0]%2 == 0
     end

@@ -2,7 +2,7 @@ require 'crocus/elements'
 
 BUFSIZE = 1000
 
-class Blossom
+class Crocus
   class EddyItemSet
     # and ItemSet is a set of (possibly partially empty) result tuple-arrays, which
     # share the same sources and ready/done status
@@ -185,13 +185,16 @@ class Blossom
        # here's where the interesting routing should go
        # but for now all we'll do is find the first stem that's ready
        n = nil
-       @ids.each do |i| 
-         if itemset.ready & 2**i != 0
-           n = @stems[i][0]
-           raise "n is nil, #{@id_to_name[i]}" if n.nil?
-           break
-         end
-       end
+       i = Crocus.highest_bit(itemset.ready)
+       raise "out of readies" if i < 0
+       n = @stems[i][0]
+       # @ids.each do |i| 
+       #   if itemset.ready & 2**i != 0
+       #     n = @stems[i][0]
+       #     raise "n is nil, #{@id_to_name[i]}" if n.nil?
+       #     break
+       #   end
+       # end
        return n
     end
     

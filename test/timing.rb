@@ -1,7 +1,7 @@
 require './test_common'
-r = Blossom::PushElement.new('r', 1, [])
-s = Blossom::PushElement.new('s', 1, [])
-e = Blossom::PushEddy.new([r,s], [[[r, [0]], [s, [0]]]]) do |inp|
+r = Crocus::PushElement.new('r', 1, [])
+s = Crocus::PushElement.new('s', 1, [])
+e = Crocus::PushEddy.new([r,s], [[[r, [0]], [s, [0]]]]) do |inp|
   if inp[0].class <= Numeric and inp[0]%2 == 0
     [inp[0]*2] 
   else

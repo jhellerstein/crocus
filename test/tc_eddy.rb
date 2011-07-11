@@ -3,9 +3,9 @@ require './test_common.rb'
 class TestEddies < Test::Unit::TestCase
   def test_binary_join
     outs = []
-    r = Blossom::PushElement.new('r', 2, [])
-    s = Blossom::PushElement.new('s', 2, [])
-    e = Blossom::PushEddy.new([r,s], [[[r, [0]], [s, [1]]]]) do |i|
+    r = Crocus::PushElement.new('r', 2, [])
+    s = Crocus::PushElement.new('s', 2, [])
+    e = Crocus::PushEddy.new([r,s], [[[r, [0]], [s, [1]]]]) do |i|
       outs << i.flatten
     end
     r.insert([1,:a])
@@ -18,8 +18,8 @@ class TestEddies < Test::Unit::TestCase
   
   def test_unary
     outs = []
-    r = Blossom::PushElement.new('r', 2, [])
-    e = Blossom::PushEddy.new([r], []) do |i|
+    r = Crocus::PushElement.new('r', 2, [])
+    e = Crocus::PushEddy.new([r], []) do |i|
       outs << i.flatten
     end
     r.insert([1,:a])
@@ -29,13 +29,13 @@ class TestEddies < Test::Unit::TestCase
    
   def test_self_join
     outs = []
-    r1 = Blossom::PushElement.new("r1", 2, [0])
-    r2 = Blossom::PushElement.new("r2", 2, [0])
-    r = Blossom::PushElement.new("r", 2, [0]) do |i|
+    r1 = Crocus::PushElement.new("r1", 2, [0])
+    r2 = Crocus::PushElement.new("r2", 2, [0])
+    r = Crocus::PushElement.new("r", 2, [0]) do |i|
       r1 << i
       r2 << i
     end
-    e = Blossom::PushEddy.new([r1,r2], [[[r1, [0]], [r2, [0]]]]) do |i|
+    e = Crocus::PushEddy.new([r1,r2], [[[r1, [0]], [r2, [0]]]]) do |i|
       outs << i.flatten
     end
     r.insert([1,:a])
@@ -47,9 +47,9 @@ class TestEddies < Test::Unit::TestCase
   def test_cross_product
     count = 0
     outs = []
-    r = Blossom::PushElement.new('r', 2, [])
-    s = Blossom::PushElement.new('s', 2, [])
-    e = Blossom::PushEddy.new([r,s], []) do |i|
+    r = Crocus::PushElement.new('r', 2, [])
+    s = Crocus::PushElement.new('s', 2, [])
+    e = Crocus::PushEddy.new([r,s], []) do |i|
       outs << i.flatten
     end
     r.insert([1,:a])
@@ -62,10 +62,10 @@ class TestEddies < Test::Unit::TestCase
   
   def test_ternary_join
     outs = []
-    r = Blossom::PushElement.new('r', 2, [])
-    s = Blossom::PushElement.new('s', 2, [])
-    t = Blossom::PushElement.new('t', 2, [])
-    e = Blossom::PushEddy.new([r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]]]) do |i|
+    r = Crocus::PushElement.new('r', 2, [])
+    s = Crocus::PushElement.new('s', 2, [])
+    t = Crocus::PushElement.new('t', 2, [])
+    e = Crocus::PushEddy.new([r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]]]) do |i|
       outs << i.flatten
     end
     r.insert([1,:a])
@@ -82,6 +82,9 @@ class TestEddies < Test::Unit::TestCase
   end
   
   def test_selection_preds
+  end
+  
+  def test_multicolumn_keys
   end
 end
     

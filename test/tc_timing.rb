@@ -2,7 +2,7 @@ require './test_common.rb'
 
 class TestTiming < Test::Unit::TestCase
   def dont_test_pull_time
-    e = Blossom::PullElement.new('p', 0, (1..1000000000))
+    e = Crocus::PullElement.new('p', 0, (1..1000000000))
     i = e.to_enum do |out, inp|
       out.yield inp if inp.class <= Numeric and inp%2 == 0
     end
@@ -13,7 +13,7 @@ class TestTiming < Test::Unit::TestCase
   end
   
   def test_push_time
-    p = Blossom::PushElement.new('p', 1, []) do |inp|
+    p = Crocus::PushElement.new('p', 1, []) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else
@@ -28,8 +28,8 @@ class TestTiming < Test::Unit::TestCase
   end
   
   def test_unary_eddy_time
-    r = Blossom::PushElement.new('r', 1, [])
-    e = Blossom::PushEddy.new([r], []) do |inp|
+    r = Crocus::PushElement.new('r', 1, [])
+    e = Crocus::PushEddy.new([r], []) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else
@@ -43,9 +43,9 @@ class TestTiming < Test::Unit::TestCase
     puts "1M unary eddy pushes: #{t2-t1} elapsed" 
   end
   def test_binary_eddy_time
-    r = Blossom::PushElement.new('r', 1, [])
-    s = Blossom::PushElement.new('s', 1, [])
-    e = Blossom::PushEddy.new([r,s], [[[r, [0]], [s, [0]]]]) do |inp|
+    r = Crocus::PushElement.new('r', 1, [])
+    s = Crocus::PushElement.new('s', 1, [])
+    e = Crocus::PushEddy.new([r,s], [[[r, [0]], [s, [0]]]]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else

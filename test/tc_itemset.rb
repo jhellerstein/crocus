@@ -2,7 +2,7 @@ require './test_common.rb'
 
 class TestItemSets < Test::Unit::TestCase
   def test_insert
-    it = Blossom::ItemSet.new(:r, 2, [0])
+    it = Crocus::ItemSet.new(:r, 2, [0])
     it << [1,:a]
     it << [2,:b]
     it << [2,:b]
