@@ -41,11 +41,9 @@ class Crocus
       if itemset.source_name == @name
         # insert into itemset and call @blk
         # puts "inserting #{item.item.inspect} into Stem #{@name}"
-        # key = @key.map{|i| item.item[item.source_id][i]}
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
-          # key = key_cols.map{|i| subitem[i]}          
-          key = insert_key.nil? ? [] : [subitem[insert_key[0]]]
+          key = insert_key.nil? ? [] : insert_key.map{|i| subitem[i]} 
           (@items[key] ||= []) << subitem
         end
         @blk.call(itemset)
@@ -55,8 +53,7 @@ class Crocus
         newitems = []
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
-          # key = key_cols.nil? ? [] : key_cols.map{|i| subitem[i]} 
-          key = lookup_key.nil? ? [] : [subitem[lookup_key[0]]]
+          key = lookup_key.nil? ? [] : lookup_key.map{|i| subitem[i]}
           matches = @items[key]
           unless matches.nil?
             matches.each do |i|
