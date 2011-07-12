@@ -6,13 +6,17 @@ class Crocus
   class EddyItemSet
     # and ItemSet is a set of (possibly partially empty) result tuple-arrays, which
     # share the same sources and ready/done status
-    attr_accessor :items, :ready, :done, :source_name, :source_id
-    def initialize(itemset_in, source_name_in, source_id_in, stems_in)
+    attr_accessor :items, :ready, :done, :source_name, :source_id, :stem_mask
+    def initialize(itemset_in, source_name_in, source_id_in, matching_stems)
       @items = itemset_in
       @source_name = source_name_in
       @source_id = source_id_in
-      @ready = 2**source_id_in # ready to route to self
-      # puts "@all_on = #{@all_on}"
+      @ready = 0
+      # ready to route to matching stems
+      matching_stems.each do |stem|
+        @ready += 2**stem.my_id
+      end
+      @stem_mask = @ready
       @done = 0
     end
     def each
@@ -21,17 +25,19 @@ class Crocus
   end
   
   class Stem < PushElement
-    attr_reader :key, :my_id, :my_bit
-    def initialize(name, arity, key, eddy, &blk)
+    attr_reader :insert_key, :lookup_key, :my_id, :my_bit
+    def initialize(name, my_id_in, source_id_in, arity, insert_key_in, lookup_key_in, eddy, &blk)
       @items = {}
-      @key = key
+      @insert_key = insert_key_in
+      @lookup_key = lookup_key_in
       @eddy = eddy
-      @my_id = eddy.name_to_id[name]
+      @my_id = my_id_in
       @my_bit = 2**@my_id
+      @source_id = source_id_in
       super(name, arity, [], &blk)
     end
     
-    def insert(itemset, key_cols)      
+    def insert(itemset)      
       if itemset.source_name == @name
         # insert into itemset and call @blk
         # puts "inserting #{item.item.inspect} into Stem #{@name}"
@@ -39,7 +45,7 @@ class Crocus
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
           # key = key_cols.map{|i| subitem[i]}          
-          key = key_cols.nil? ? [] : [subitem[key_cols[0]]]
+          key = insert_key.nil? ? [] : [subitem[insert_key[0]]]
           (@items[key] ||= []) << subitem
         end
         @blk.call(itemset)
@@ -50,13 +56,20 @@ class Crocus
         itemset.items.each do |item|
           subitem = item[itemset.source_id]
           # key = key_cols.nil? ? [] : key_cols.map{|i| subitem[i]} 
-          key = key_cols.nil? ? [] : [subitem[key_cols[0]]]
+          key = lookup_key.nil? ? [] : [subitem[lookup_key[0]]]
           matches = @items[key]
           unless matches.nil?
             matches.each do |i|
-              item[@my_id] = i
-              newitem = item.clone
-              newitems << newitem
+              if item[@source_id].nil?
+                # time to fill in this part of the output tuple
+                newitem = item.clone
+                newitem[@source_id] = i
+              else
+                # this match is not the one that was filled into this output tuple
+                next if item[@source_id] != i
+                newitem = item
+              end
+              newitems << newitem unless newitem.nil?
             end
           end
         end 
@@ -71,7 +84,7 @@ class Crocus
   end
 
   class PushEddy < PushElement
-    attr_reader :id_to_name, :name_to_id, :all_on, :init_ready, :id_to_preds
+    attr_reader :name_to_source_id, :all_on, :init_ready, :stem_id_to_pair_bit
     attr_accessor :curid
     # innies is an array of PushElements that push back to the Eddy
     # preds is an array of attribute pairs of the form [[push_elem, key], [push_elem, key]]
@@ -79,13 +92,14 @@ class Crocus
       @elements = []
       @inputs = innies
       @preds = preds
-      @stems = {}
-      @id_to_name = {}
-      @name_to_id = {}
-      @curid = 0
+      @stems = []
+      @source_id_to_stems = {}
+      @name_to_source_id = {}
+      @cur_source_id = 0
       @blk = blk
-      @id_to_preds = {}
+      @stem_id_to_pair_bit = {}
       @ids = (0..@inputs.length-1) # precompute this outside the insert path!
+      @all_on = 0
       
       counts = @inputs.reduce({}) do |memo,i|
         memo[i.name] ||= 0
@@ -97,7 +111,6 @@ class Crocus
       
       @input_bufs = {}
       inputs_left = {}
-      @all_on = 0
       @inputs.each_with_index do |inp, i| 
         # set up a buffer for each input
         @input_bufs[i] = []     
@@ -105,36 +118,40 @@ class Crocus
         inp.set_block { |item| self.insert(item, inp) }
         # keep track of the inputs we haven't made a stem for yet
         (inputs_left[inp.name] ||= []) << inp
-        # add up all the input bits
-        @all_on += 2**i
       end
       
       # for each pred, make sure we have an appropriately-keyed stem
       @preds.each do |l, r|
-        register_stem(l[0].name, l[0].arity, l[1])
+        l_id = register_stem(l[0].name, l[0].arity, l[1], r[1])
         inputs_left[l[0].name].pop
-        register_stem(r[0].name, r[0].arity, r[1])
+        r_id = register_stem(r[0].name, r[0].arity, r[1], l[1])
         inputs_left[r[0].name].pop
-        (id_to_preds[name_to_id[l[0].name]] ||= []) << [2**name_to_id[r[0].name], r[1]]
-        (id_to_preds[name_to_id[r[0].name]] ||= []) << [2**name_to_id[l[0].name], l[1]]
+        stem_id_to_pair_bit[l_id] = 2**r_id
+        stem_id_to_pair_bit[r_id] = 2**l_id
       end
       
       # any inputs that are left will have a stem that we'll need to scan
       inputs_left.each do |k,v|
         v.each do |i|
-          register_stem(i.name, i.arity, []) # empty key will hash all entries together on nil
+          register_stem(i.name, i.arity, nil, nil) # empty key will hash all entries together on nil
         end
       end      
     end   
     
-    def register_stem(name, arity, key)
-      return if @name_to_id[name]
-      @id_to_name[@curid] = name
-      @name_to_id[name] = @curid
-      (@stems[@curid] ||= []) << Stem.new(name,arity,key,self) do |item|
+    def register_stem(name, arity, insert_key, lookup_key)
+      # XXX Check for redunant Stems?
+      # return if @name_to_id[name]
+      source_id = (@name_to_source_id[name] ||= @cur_source_id)
+      @cur_source_id += 1 if source_id == @cur_source_id
+      stem_id = @stems.length
+      # puts "registering Stem #{stem_id} for #{name}[#{insert_key}]"
+      newstem = Stem.new(name,stem_id,source_id,arity,insert_key,lookup_key,self) do |item|
         self.route(item)
       end
-      @curid += 1
+      @stems << newstem
+      (@source_id_to_stems[source_id] ||= []) << newstem
+      @all_on += 2**stem_id
+      return stem_id
     end
     
     def flush
@@ -144,16 +161,15 @@ class Crocus
         @input_bufs.each do |id, buf| 
           if buf.length > 0
             found = true
-            flush_buf(buf, @inputs[id])
+            flush_buf(buf, @inputs[id], id)
           end
         end
       end
     end
           
       
-    def flush_buf(buf, source)
-      source_id = name_to_id[source.name]
-      itemset = EddyItemSet.new(buf, source.name, source_id, @stems)
+    def flush_buf(buf, source, source_id)
+      itemset = EddyItemSet.new(buf, source.name, source_id, @source_id_to_stems[source_id])
       @input_bufs[source_id] = []
       # puts "created EddyItem #{item.inspect}"
       # and route
@@ -161,45 +177,42 @@ class Crocus
     end
     
     def insert(item, source) 
-      # convert inbound singleton into outbound format
-      source_id = name_to_id[source.name]
+      # handle inbound singletons: convert into outbound format and batch
+      source_id = @name_to_source_id[source.name]
       newitem = Array.new(@inputs.length)
       newitem[source_id] = item
-      buf = @input_bufs[source_id]
+      buf = (@input_bufs[source_id] ||= [])
       buf << newitem
-      if (item.length >= BUFSIZE)
-        flush_buf(buf, source)
+      if (buf.length >= BUFSIZE)
+        flush_buf(buf, source, source_id)
       end
     end
     
     def choose_route(itemset)
-      # route to self first
-       # selfbit = 2**@name_to_id[item.source_name]
-       # n = nil
-       # if item.ready & selfbit != 0
-       #   n = @stems[item.source_name][0]
-       #   raise "n is nil, #{@id_to_name[i]}" if n.nil?
-       #   return n
-       # end
-
-       # here's where the interesting routing should go
-       # but for now all we'll do is find the first stem that's ready
-       n = nil
-       i = Crocus.highest_bit(itemset.ready)
-       raise "out of readies" if i < 0
-       n = @stems[i][0]
-       # @ids.each do |i| 
-       #   if itemset.ready & 2**i != 0
-       #     n = @stems[i][0]
-       #     raise "n is nil, #{@id_to_name[i]}" if n.nil?
-       #     break
-       #   end
-       # end
-       return n
+      n = nil
+      # always route to a self-stem if there is one
+      matches = itemset.ready & itemset.stem_mask
+      i = Crocus.highest_bit(matches)
+      if (i < 0)
+        # no self-routes.
+        # here's where the interesting routing should go
+        # but for now all we'll do is find the first stem that's ready
+        i = Crocus.highest_bit(itemset.ready)
+      end
+      raise "out of readies" if i < 0
+      n = @stems[i]
+      # @ids.each do |i| 
+      #   if itemset.ready & 2**i != 0
+      #     n = @stems[i][0]
+      #     raise "n is nil, #{@id_to_name[i]}" if n.nil?
+      #     break
+      #   end
+      # end
+      return n
     end
     
     def route(itemset)
-      return if itemset.nil?
+      return if itemset.nil? or itemset.items == []
       # raise "item from unknown source #{itemset.source_name}" if @name_to_id[itemset.source_name].nil?
       # puts "item.done = #{item.done}, @inputs.length = #{@inputs.length}"
       if itemset.done == @all_on
@@ -213,26 +226,16 @@ class Crocus
       itemset.ready = @all_on - itemset.done if itemset.ready == 0
       # choose dest
       n = choose_route(itemset)
-      preds = id_to_preds[n.my_id] 
-      if itemset.source_id != n.my_id
-        key_cols = preds.first[1] unless preds.nil? # so far we only handle on a single join pred!
-        # key = key_cols.nil? ? [] : key.map{|i| item.item[item.source_id][i]}
-        # puts "routing #{item.item.inspect} from #{item.source_name} to Stem #{n.name} with lookup key #{key_cols}"
-      else
-        key_cols = n.key
-        # key = key_cols.map{|i| item.item[item.source_id][i]}
-        # puts "routing #{item.item.inspect} from #{item.source_name} to Stem #{n.name} with insert key #{key_cols}"
-      end
-
       # flip the bits to what they should be AFTER this insert
       itemset.ready -= n.my_bit
-      unless preds.nil?
-        preds.each {|i| itemset.ready += i[0] if (itemset.ready & i[0] == 0) and (itemset.done & i[0] == 0)}
+      pair_bit = stem_id_to_pair_bit[n.my_id]
+      unless pair_bit.nil?
+        itemset.ready += pair_bit if (itemset.ready & pair_bit == 0) and (itemset.done & pair_bit == 0)
       end
       itemset.done += n.my_bit 
               
-      key_cols = nil if key_cols == []
-      n.insert(itemset, key_cols)
+      # puts "routing itemset #{itemset.items.inspect}from #{itemset.source_name} to stem [#{n.name}(#{n.insert_key})]"
+      n.insert(itemset)
     end
   end
 end
