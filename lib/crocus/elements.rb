@@ -55,7 +55,7 @@ class Crocus
     def wire_to(element)
       @blk = lambda{|i| element.insert(i,self)}
     end
-    def insert(item, caller=nil)
+    def insert(item, source=nil)
       raise "PushElement #{@name} has no block" if @blk.nil?
       @blk.call(item) unless item.nil? or item == []
     end

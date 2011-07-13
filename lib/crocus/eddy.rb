@@ -36,7 +36,7 @@ class Crocus
       super(name, arity, [eddy], &blk)
     end
     
-    def insert(itemset, caller)      
+    def insert(itemset, source)      
       if itemset.source_name == @name
         # insert into itemset and call @blk
         # puts "inserting #{item.item.inspect} into Stem #{@name}"

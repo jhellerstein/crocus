@@ -53,7 +53,7 @@ class TestTiming < Test::Unit::TestCase
       process_item(inp)
     end
     t1 = Time.now
-    (0..1000000).each{|i| e.insert([i], r)}
+    (0..1000000).each{|i| r.insert([i])}
     r.flush; e.flush
     t2 = Time.now
     puts "1M unary eddy pushes: #{t2-t1} elapsed" 
@@ -65,7 +65,7 @@ class TestTiming < Test::Unit::TestCase
       process_item(inp)  
     end
     t1 = Time.now
-    (0..500000).each{|i| e.insert([i,:a], r); e.insert([i, :b], s)}
+    (0..500000).each{|i| r.insert([i,:a]); s.insert([i, :b])}
     r.flush; s.flush; e.flush 
     t2 = Time.now
     puts "1M binary join eddy pushes: #{t2-t1} elapsed" 
