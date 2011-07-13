@@ -21,7 +21,7 @@ class Crocus
       end
     end
     
-    def flush
+    def local_end(source)
       @groups.each do |g, grps|
         grp = @keys == [] ? [] : [g]
         @aggpairs.each_with_index do |ap, agg_ix|
@@ -29,6 +29,7 @@ class Crocus
         end
         @blk.call(grp.flatten)
       end
+      @groups = {}
     end
   end
   
@@ -71,8 +72,9 @@ class Crocus
       end      
     end 
     
-    def flush
+    def local_end(source)
       @groups.keys.each {|g| @blk.call(@winners[g])}
+      true
     end
   end
 

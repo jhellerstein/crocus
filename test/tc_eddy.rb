@@ -8,8 +8,9 @@ class TestEddies < Test::Unit::TestCase
     e = Crocus::PushEddy.new('e1', 2, [r], []) do |i|
       outs << i
     end
+    r.wire_to(e)
     r.insert([1,:a])
-    r.flush; e.flush
+    r.end
     assert_equal([[1, :a]], outs)      
   end  
    
@@ -21,11 +22,13 @@ class TestEddies < Test::Unit::TestCase
      e = Crocus::PushEddy.new('e1', 4, [r,s], [[[r, [0]], [s, [1]]]]) do |i|
        outs << i
      end
+     r.wire_to(e)
+     s.wire_to(e)
      r.insert([1,:a])
      s.insert([:b,1])
      r.insert([2,:c])
      s.insert([:d,2])
-     r.flush; s.flush; e.flush
+     r.end; s.end
      assert_equal([[1, :a, :b, 1],[2, :c, :d, 2]], outs.sort)      
    end
    
@@ -33,18 +36,19 @@ class TestEddies < Test::Unit::TestCase
    # XXX maybe differentiate (name,instance) of input elements rather than requiring differently-named elements?
    def test_self_join
      outs = []
-     r1 = Crocus::PushElement.new("r1", 2, [0])
-     r2 = Crocus::PushElement.new("r2", 2, [0])
-     r = Crocus::PushElement.new("r", 2, [0]) do |i|
-       r1 << i
-       r2 << i
-     end
+     r = Crocus::PushElement.new("r", 2, [])
+     r1 = Crocus::PushElement.new("r1", 2, [r])
+     r2 = Crocus::PushElement.new("r2", 2, [r])
      e = Crocus::PushEddy.new('e1', 4, [r1,r2], [[[r1, [0]], [r2, [0]]]]) do |i|
        outs << i
      end
+     r.wire_to(r1)
+     r.wire_to(r2)
+     r1.wire_to(e)
+     r2.wire_to(e)
      r.insert([1,:a])
      r.insert([2,:b])
-     r.flush; r1.flush; r2.flush; e.flush
+     r.end
      assert_equal([[1, :a, 1, :a], [2, :b, 2, :b]], outs.sort)
    end
    
@@ -57,11 +61,13 @@ class TestEddies < Test::Unit::TestCase
      e = Crocus::PushEddy.new('e1', 4, [r,s], []) do |i|
        outs << i
      end
+     r.wire_to(e)
+     s.wire_to(e)
      r.insert([1,:a])
      s.insert([1,:b])
      s.insert([2,:c])
      r.insert([3,:d])
-     r.flush; s.flush; e.flush
+     r.end; s.end
      assert_equal([[1, :a, 1, :b], [1, :a, 2, :c], [3, :d, 1, :b], [3, :d, 2, :c]], outs.sort)
    end
   
@@ -74,13 +80,16 @@ class TestEddies < Test::Unit::TestCase
     e = Crocus::PushEddy.new('e1', 6, [r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]]]) do |i|
       outs << i
     end
+    r.wire_to(e)
+    s.wire_to(e)
+    t.wire_to(e)
     r.insert([1,:a])
     s.insert([1,:b])
     t.insert([1,:c])
     r.insert([2,:a])
     s.insert([2,:b])
     t.insert([2,:c])
-    r.flush; s.flush; t.flush; e.flush
+    r.end; s.end; t.end
     assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs.sort)
   end
   
@@ -92,13 +101,15 @@ class TestEddies < Test::Unit::TestCase
     e = Crocus::PushEddy.new('e', 4, [r,s], [[[r, [0,1]], [s, [1,0]]]]) do |i|
       outs << i unless i.nil?
     end
+    r.wire_to(e)
+    s.wire_to(e)
     r.insert([1,:a])
     s.insert([:a,1])
     r.insert([2,:b])
     s.insert([:b,2])
     s.insert([:c,2])
     r.insert([2,:d])
-    r.flush; s.flush; e.flush
+    r.end; s.end
     assert_equal([[1, :a, :a, 1],[2, :b, :b, 2]], outs.sort)
   end
   
@@ -112,13 +123,15 @@ class TestEddies < Test::Unit::TestCase
     e = Crocus::PushEddy.new('e', 4, [r,s], [[[r, [0]], [s, [1]]], [[r,[1]], [s,[0]]]]) do |i|
       outs << i unless i.nil?
     end
+    r.wire_to(e)
+    s.wire_to(e)
     r.insert([1,:a])
     s.insert([:a,1])
     r.insert([2,:b])
     s.insert([:b,2])
     s.insert([:c,2])
     r.insert([2,:d])
-    r.flush; s.flush; e.flush
+    r.end; s.end
     assert_equal([[1, :a, :a, 1],[2, :b, :b, 2]], outs.sort)
   end
   
@@ -131,16 +144,19 @@ class TestEddies < Test::Unit::TestCase
     e = Crocus::PushEddy.new('e', 6, [r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]], [[t,[0]], [r, [0]]]]) do |i|
       outs << i
     end
+    r.wire_to(e)
+    s.wire_to(e)
+    t.wire_to(e)
     r.insert([1,:a])
     s.insert([1,:b])
     t.insert([1,:c])
     r.insert([2,:a])
     s.insert([2,:b])
     t.insert([2,:c])
-    r.flush; s.flush; t.flush; e.flush
+    r.end; s.end; t.end
     assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs.sort)
   end  
-
+  
   require 'set'
   def test_eddy_recursion
     outs = Set.new
@@ -162,7 +178,7 @@ class TestEddies < Test::Unit::TestCase
     links << ([6,7])
     links << ([2,7])
     links.each {|l| link << l; path << l}
-    link.flush; path.flush; j.flush
+    link.end; path.end
     assert_equal([[1,2],[1,3],[1,4],[1,7],[2,3],[2,4],[2,7],[3,4],[6,7]], (outs+links).to_a.sort)
   end  
 end

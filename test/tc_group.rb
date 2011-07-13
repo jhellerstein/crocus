@@ -11,7 +11,7 @@ class TestGroupBy < Test::Unit::TestCase
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
-    r.flush; g.flush
+    r.flush; g.end
     assert_equal([[:a, 3],[:c, 2]], outs.sort)      
   end
   
@@ -25,7 +25,7 @@ class TestGroupBy < Test::Unit::TestCase
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
-    r.flush; g.flush
+    r.flush; g.end
     assert_equal([[5]], outs.sort)
   end
       
@@ -39,7 +39,7 @@ class TestGroupBy < Test::Unit::TestCase
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
-    r.flush; g.flush
+    g.end
     assert_equal([[1, :a],[2, :c]], outs.sort)      
   end
   
@@ -53,7 +53,7 @@ class TestGroupBy < Test::Unit::TestCase
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
-    r.flush; g.flush
+    g.end
     assert_equal([[1, :a]], outs.sort)      
   end
 end

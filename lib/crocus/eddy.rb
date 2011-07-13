@@ -1,5 +1,6 @@
 require 'crocus/bits'
 require 'crocus/elements'
+require 'set'
 
 class Crocus
   class EddyItemSet
@@ -73,6 +74,10 @@ class Crocus
         @blk.call(itemset)
       end
     end
+    def local_end(source)
+      @items = {}
+      return true
+    end
   end
 
   class PushEddy < PushElement
@@ -91,6 +96,7 @@ class Crocus
       @stem_id_to_pair_bit = {}
       @ids = (0..@inputs.length-1) # precompute this outside the insert path!
       @all_on = 0
+      @sources_ended = Set.new
       
       counts = @inputs.reduce({}) do |memo,i|
         memo[i.name] ||= 0
@@ -145,7 +151,7 @@ class Crocus
       return stem_id
     end
     
-    def flush
+    def local_flush
       found = true
       while found
         found = false
@@ -227,6 +233,17 @@ class Crocus
               
       # puts "routing itemset #{itemset.items.inspect}from #{itemset.source_name} to stem [#{n.name}(#{n.insert_key})]"
       n.insert(itemset, self)
+    end
+    
+    def local_end(source)
+      @sources_ended.add source
+      if @sources_ended.size == @inputs.size
+        local_flush
+        @stems.each {|s| s.end(self)}
+        return true
+      else
+        return false
+      end
     end
   end
 end

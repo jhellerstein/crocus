@@ -14,7 +14,7 @@ class TestJoins < Test::Unit::TestCase
      s.insert([:b,1])
      r.insert([2,:c])
      s.insert([:d,2])
-     r.flush; s.flush; j.flush
+     r.end; s.end
      assert_equal([[1, :a, :b, 1],[2, :c, :d, 2]], outs.sort)      
    end
    
@@ -38,7 +38,7 @@ class TestJoins < Test::Unit::TestCase
      r.insert([2,:a])
      s.insert([2,:b])
      t.insert([2,:c])
-     r.flush; s.flush; t.flush; j1.flush; j2.flush
+     r.end; s.end; t.end
      assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs.sort)
    end
    
@@ -63,7 +63,7 @@ class TestJoins < Test::Unit::TestCase
      links << ([6,7])
      links << ([2,7])
      links.each {|l| link << l; path << l}
-     link.flush; path.flush; j.flush
+     link.end;path.end
      assert_equal([[1,2],[1,3],[1,4],[1,7],[2,3],[2,4],[2,7],[3,4],[6,7]], (outs+links).to_a.sort)
    end
 end

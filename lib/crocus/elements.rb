@@ -1,4 +1,5 @@
 BUFSIZE = 1000
+require "set"
 
 class Crocus
   # pattern taken from 
@@ -42,7 +43,7 @@ class Crocus
   # p.insert(1)
   # p.insert(nil)
   class PushElement
-    attr_reader :name, :arity
+    attr_reader :name, :arity, :inputs
     def initialize(name, arity, *innies, &blk)
       @name = name
       @arity = arity
@@ -53,7 +54,8 @@ class Crocus
       @blk = blk
     end
     def wire_to(element)
-      @blk = lambda{|i| element.insert(i,self)}
+      (@outputs ||= []) << element
+      @blk = lambda{|i| @outputs.each{|o| o.insert(i,self)}}
     end
     def insert(item, source=nil)
       raise "PushElement #{@name} has no block" if @blk.nil?
@@ -62,7 +64,23 @@ class Crocus
     def <<(i)
       insert(i, nil)
     end
+    # flushes should always be propagated downstream.  
     def flush
+      local_flush
+      @outputs.each {|o| o.flush} if @outputs
+    end
+    # flush should ensure that any deferred inserts are processed.
+    # it is *not* a promise of end-of-stream.
+    def local_flush
+    end
+    # ends should be handled carefully
+    def end(source=nil)
+      if local_end(source)
+        @outputs.each {|o| o.end(self)} if @outputs
+      end
+    end
+    def local_end(source)
+      true
     end
     undef to_enum
   end

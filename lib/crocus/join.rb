@@ -1,4 +1,5 @@
 require 'crocus/elements'
+require 'set'
 
 class Crocus
   class PushSHJoin < PushElement
@@ -8,6 +9,7 @@ class Crocus
       @source_names = sources_in.map{|s| s.name}
       @input_bufs = [[],[]]
       @keys = keys_in
+      @sources_ended = Set.new
     end
   
     def insert(item, source)
@@ -41,10 +43,21 @@ class Crocus
       buf.each do |item|
         insert_item(item, offset)
       end
+      @input_bufs[offset] = []
     end
-    def flush
+    def local_flush
       @input_bufs.each_with_index do |buf, offset| 
-        flush_buf(buf, offset) if buf.length > 0
+        flush_buf(buf,offset) if buf.length > 0
+      end
+    end
+    def local_end(source)
+      @sources_ended << source
+      if @sources_ended.size == 2
+        local_flush
+        @items = [{},{}]
+        return true
+      else
+        return false
       end
     end
   end
