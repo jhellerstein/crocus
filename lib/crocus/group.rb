@@ -23,7 +23,7 @@ class Crocus
     
     def flush
       @groups.each do |g, grps|
-        grp = [g]
+        grp = @keys == [] ? [] : [g]
         @aggpairs.each_with_index do |ap, agg_ix|
           grp << ap[0].send(:final, grps[agg_ix])
         end

@@ -15,6 +15,20 @@ class TestGroupBy < Test::Unit::TestCase
     assert_equal([[:a, 3],[:c, 2]], outs.sort)      
   end
   
+  def test_agg_nogroup
+    outs = []
+    r = Crocus::PushElement.new('r', 2, [])
+    g = Crocus::PushGroup.new('g', 1, [r], nil, [[Crocus::Sum.new, 0]]) do |i|
+      outs << i unless i.nil?
+    end
+    r.set_block {|i| g.insert(i)}
+    r.insert([1,:a])
+    r.insert([2,:a])
+    r.insert([2,:c])
+    r.flush; g.flush
+    assert_equal([[5]], outs.sort)
+  end
+      
   def test_argagg
     outs = []
     r = Crocus::PushElement.new('r', 2, [])
