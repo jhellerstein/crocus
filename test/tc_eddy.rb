@@ -154,8 +154,8 @@ class TestEddies < Test::Unit::TestCase
         path << tup
       end
     end
-    link.set_block{|l| j.insert(l, link)}
-    path.set_block{|p| j.insert(p, path)}
+    link.wire_to(j)
+    path.wire_to(j)
     links << ([1,2])
     links << ([2,3])
     links << ([3,4])

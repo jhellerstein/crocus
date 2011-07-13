@@ -8,8 +8,8 @@ class TestJoins < Test::Unit::TestCase
      j = Crocus::PushSHJoin.new('j', 4, [r,s], [[0],[1]]) do |i|
        outs << i
      end
-     r.set_block {|i| j.insert(i,r)}
-     s.set_block {|i| j.insert(i,s)}
+     r.wire_to(j)
+     s.wire_to(j)
      r.insert([1,:a])
      s.insert([:b,1])
      r.insert([2,:c])
@@ -27,10 +27,10 @@ class TestJoins < Test::Unit::TestCase
      j2 = Crocus::PushSHJoin.new('j2', 6, [j1, t], [[2],[0]]) do |i|
        outs << i
      end
-     r.set_block{|i| j1.insert(i,r)}
-     s.set_block{|i| j1.insert(i,s)}
-     t.set_block{|i| j2.insert(i,t)}
-     j1.set_block{|i| j2.insert(i,j1)}
+     r.wire_to(j1)
+     s.wire_to(j1)
+     t.wire_to(j2)
+     j1.wire_to(j2)
      
      r.insert([1,:a])
      s.insert([1,:b])
@@ -55,8 +55,8 @@ class TestJoins < Test::Unit::TestCase
          path << tup
        end
      end
-     link.set_block{|l| j.insert(l, link)}
-     path.set_block{|p| j.insert(p, path)}
+     link.wire_to(j)
+     path.wire_to(j)
      links << ([1,2])
      links << ([2,3])
      links << ([3,4])

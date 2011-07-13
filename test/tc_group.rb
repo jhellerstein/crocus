@@ -7,7 +7,7 @@ class TestGroupBy < Test::Unit::TestCase
     g = Crocus::PushGroup.new('g', 2, [r], [1], [[Crocus::Sum.new, 0]]) do |i|
       outs << i unless i.nil?
     end
-    r.set_block {|i| g.insert(i)}
+    r.wire_to(g)
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
@@ -21,7 +21,7 @@ class TestGroupBy < Test::Unit::TestCase
     g = Crocus::PushGroup.new('g', 1, [r], nil, [[Crocus::Sum.new, 0]]) do |i|
       outs << i unless i.nil?
     end
-    r.set_block {|i| g.insert(i)}
+    r.wire_to(g)
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
@@ -35,7 +35,7 @@ class TestGroupBy < Test::Unit::TestCase
     g = Crocus::PushArgAgg.new('g', 2, [r], [1], [[Crocus::Min.new, 0]]) do |i|
       outs << i unless i.nil?
     end
-    r.set_block {|i| g.insert(i)}
+    r.wire_to(g)
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])
@@ -49,7 +49,7 @@ class TestGroupBy < Test::Unit::TestCase
     g = Crocus::PushArgAgg.new('g', 2, [r], nil, [[Crocus::Min.new, 0]]) do |i|
       outs << i unless i.nil?
     end
-    r.set_block {|i| g.insert(i)}
+    r.wire_to(g)
     r.insert([1,:a])
     r.insert([2,:a])
     r.insert([2,:c])

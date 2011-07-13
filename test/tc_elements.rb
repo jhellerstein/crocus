@@ -32,6 +32,22 @@ class TestElements < Test::Unit::TestCase
     assert_equal(nil, results.pop)
   end
   
+  def test_push_pair
+    results = []
+    p = Crocus::PushElement.new(:p,0,[])
+    q = Crocus::PushElement.new(:q,0,[]) do |inp|
+      if inp[0].class <= Numeric and inp[0]%2 == 0
+        results << [inp[0]*2] 
+      else
+        results << [-1]
+      end
+    end
+    p.wire_to(q)
+    p.insert([2])
+    p.flush; q.flush
+    assert_equal([4], results.pop)
+  end
+  
   def test_pull_itemset
     it = Crocus::ItemSet.new(:r,2,[0])
     (0..1000).each do |i|

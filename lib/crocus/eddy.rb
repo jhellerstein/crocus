@@ -36,7 +36,7 @@ class Crocus
       super(name, arity, [eddy], &blk)
     end
     
-    def insert(itemset)      
+    def insert(itemset, caller)      
       if itemset.source_name == @name
         # insert into itemset and call @blk
         # puts "inserting #{item.item.inspect} into Stem #{@name}"
@@ -72,10 +72,6 @@ class Crocus
         itemset.items = newitems
         @blk.call(itemset)
       end
-    end
-      
-    def <<(i)
-      insert(i)
     end
   end
 
@@ -230,7 +226,7 @@ class Crocus
       itemset.done += n.my_bit 
               
       # puts "routing itemset #{itemset.items.inspect}from #{itemset.source_name} to stem [#{n.name}(#{n.insert_key})]"
-      n.insert(itemset)
+      n.insert(itemset, self)
     end
   end
 end
