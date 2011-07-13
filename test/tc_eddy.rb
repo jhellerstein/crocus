@@ -101,7 +101,7 @@ class TestEddies < Test::Unit::TestCase
     r.flush; s.flush; e.flush
     assert_equal([[1, :a, :a, 1],[2, :b, :b, 2]], outs.sort)
   end
-
+  
   # multiple independent preds on the same pair of tables.  same semantics
   # as previous. 
   # XXX would be nice if engine optimized to the previous
@@ -139,6 +139,31 @@ class TestEddies < Test::Unit::TestCase
     t.insert([2,:c])
     r.flush; s.flush; t.flush; e.flush
     assert_equal([[1, :a, 1, :b, 1, :c], [2, :a, 2, :b, 2, :c]], outs.sort)
+  end  
+
+  require 'set'
+  def test_eddy_recursion
+    outs = Set.new
+    links = Set.new
+    link = Crocus::PushElement.new('link', 2, [])
+    path = Crocus::PushElement.new('path', 2, [])
+    j = Crocus::PushEddy.new([link,path], [[[link,[1]],[path,[0]]]]) do |i|
+      tup = [i[0][0], i[1][1]]
+      unless outs.include? tup
+        outs << tup
+        path << tup
+      end
+    end
+    link.set_block{|l| j.insert(l, link)}
+    path.set_block{|p| j.insert(p, path)}
+    links << ([1,2])
+    links << ([2,3])
+    links << ([3,4])
+    links << ([6,7])
+    links << ([2,7])
+    links.each {|l| link << l; path << l}
+    link.flush; path.flush; j.flush
+    assert_equal([[1,2],[1,3],[1,4],[1,7],[2,3],[2,4],[2,7],[3,4],[6,7]], (outs+links).to_a.sort)
   end  
 end
     

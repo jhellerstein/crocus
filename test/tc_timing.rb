@@ -62,7 +62,7 @@ class TestTiming < Test::Unit::TestCase
   def test_binary_join_time
     r = Crocus::PushElement.new('r', 1, [])
     s = Crocus::PushElement.new('s', 1, [])
-    j = Crocus::ShJoin.new('j', [r,s], [[0],[0]]) do |inp|
+    j = Crocus::PushSHJoin.new('j', [r,s], [[0],[0]]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else

@@ -1,7 +1,7 @@
 require 'crocus/elements'
 
 class Crocus
-  class ShJoin < PushElement
+  class PushSHJoin < PushElement
     def initialize(name, sources_in, keys_in, &blk)
       @items = [{}, {}]
       @sources = sources_in.map{|s| s.name}
@@ -14,10 +14,13 @@ class Crocus
       raise "item #{item} inserted into join from unknown source #{source.name}" if offset.nil?
       key = @keys[offset].map{|k| item[k]}
       #build
+      # puts "building #{item} into @source[#{offset}] on key #{key}"
       (@items[offset][key] ||= []) << item
       #and probe
+      # puts "probing #{item} into @source[#{1-offset}] on key #{key}"
       matches = @items[1-offset][key]
       matches.each do |m|
+        # puts "    found match #{m}"
         result = [nil,nil]
         result[offset] = item
         result[1-offset] = m
