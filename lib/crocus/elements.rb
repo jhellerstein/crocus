@@ -1,3 +1,5 @@
+BUFSIZE = 1000
+
 class Crocus
   # pattern taken from 
   # http://en.wikibooks.org/wiki/Ruby_Programming/Reference/Objects/Enumerable#Lazy_evaluation

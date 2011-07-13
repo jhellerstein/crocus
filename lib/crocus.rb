@@ -1,6 +1,7 @@
 require 'crocus/eddy'
 require 'crocus/elements'
 require 'crocus/itemset'
+require 'crocus/join'
 
 class Crocus
   # from http://graphics.stanford.edu/~seander/bithacks.html#IntegerLogLookup

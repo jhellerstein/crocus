@@ -58,19 +58,40 @@ class TestTiming < Test::Unit::TestCase
     t2 = Time.now
     puts "1M binary join eddy pushes: #{t2-t1} elapsed" 
   end  
-  def test_array_hash_insertion
+  
+  def test_binary_join_time
+    r = Crocus::PushElement.new('r', 1, [])
+    s = Crocus::PushElement.new('s', 1, [])
+    j = Crocus::ShJoin.new('j', [r,s], [[0],[0]]) do |inp|
+      if inp[0].class <= Numeric and inp[0]%2 == 0
+        [inp[0]*2] 
+      else
+        [-1]
+      end
+    end
+    r.set_block {|i| j.insert(i,r)}
+    s.set_block {|i| j.insert(i,s)}
+    t1 = Time.now
+    (0..500000).each{|i| r.insert([i]); s.insert([i])}
+    r.flush; s.flush; j.flush 
+    t2 = Time.now
+
+    puts "1M binary symmetric join pushes: #{t2-t1} elapsed"
+  end
+  
+  def test_hash_array_insertion
     h = {}
     t1 = Time.now
     (0..1000000).each{|i| h[[i]] = [i,:a]}
     t2 = Time.now
-    puts "1M array-hash insertions: #{t2-t1} elapsed" 
+    puts "1M hash(array) insertions: #{t2-t1} elapsed" 
   end
-  def test_int_hash_insertion
+  def test_hash_int_insertion
     h = {}
     t1 = Time.now
     (0..1000000).each{|i| h[i] = [i,:a]}
     t2 = Time.now
-    puts "1M int-hash insertions: #{t2-t1} elapsed" 
+    puts "1M hash(int) insertions: #{t2-t1} elapsed" 
   end
 end
     

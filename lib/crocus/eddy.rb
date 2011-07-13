@@ -1,7 +1,5 @@
 require 'crocus/elements'
 
-BUFSIZE = 1000
-
 class Crocus
   class EddyItemSet
     # and ItemSet is a set of (possibly partially empty) result tuple-arrays, which
