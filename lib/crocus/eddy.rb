@@ -1,3 +1,4 @@
+require 'crocus/bits'
 require 'crocus/elements'
 
 class Crocus
@@ -32,7 +33,7 @@ class Crocus
       @my_id = my_id_in
       @my_bit = 2**@my_id
       @source_id = source_id_in
-      super(name, arity, [], &blk)
+      super(name, arity, [eddy], &blk)
     end
     
     def insert(itemset)      
@@ -83,15 +84,14 @@ class Crocus
     attr_accessor :curid
     # innies is an array of PushElements that push back to the Eddy
     # preds is an array of attribute pairs of the form [[push_elem, key], [push_elem, key]]
-    def initialize(innies, preds, &blk)
+    def initialize(name, arity, innies, preds, &blk)
+      super(name, arity, *innies, &blk)    
       @elements = []
-      @inputs = innies
       @preds = preds
       @stems = []
       @source_id_to_stems = {}
       @name_to_source_id = {}
       @cur_source_id = 0
-      @blk = blk
       @stem_id_to_pair_bit = {}
       @ids = (0..@inputs.length-1) # precompute this outside the insert path!
       @all_on = 0
@@ -130,7 +130,7 @@ class Crocus
         v.each do |i|
           register_stem(i.name, i.arity, nil, nil) # empty key will hash all entries together on nil
         end
-      end      
+      end  
     end   
     
     def register_stem(name, arity, insert_key, lookup_key)
