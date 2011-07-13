@@ -5,7 +5,7 @@ class TestGroupBy < Test::Unit::TestCase
     outs = []
     r = Crocus::PushElement.new('r', 2, [])
     g = Crocus::PushGroup.new('g', 2, [r], [1], [[Crocus::Sum.new, 0]]) do |i|
-      outs << i.flatten unless i.nil?
+      outs << i unless i.nil?
     end
     r.set_block {|i| g.insert(i)}
     r.insert([1,:a])
@@ -19,7 +19,7 @@ class TestGroupBy < Test::Unit::TestCase
     outs = []
     r = Crocus::PushElement.new('r', 2, [])
     g = Crocus::PushArgAgg.new('g', 2, [r], [1], [[Crocus::Min.new, 0]]) do |i|
-      outs << i.flatten unless i.nil?
+      outs << i unless i.nil?
     end
     r.set_block {|i| g.insert(i)}
     r.insert([1,:a])

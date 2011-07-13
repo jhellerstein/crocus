@@ -24,7 +24,7 @@ class Crocus
         result = [nil,nil]
         result[offset] = item
         result[1-offset] = m
-        @blk.call(result)
+        @blk.call(result.flatten)
       end unless matches.nil?
     end
   end

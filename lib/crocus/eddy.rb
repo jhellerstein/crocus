@@ -212,7 +212,7 @@ class Crocus
       # puts "item.done = #{item.done}, @inputs.length = #{@inputs.length}"
       if itemset.done == @all_on
         raise "orphaned stuff in ready: #{itemset.ready.inspect}" unless itemset.ready == 0
-        itemset.items.each {|item| @blk.call(item)}
+        itemset.items.each {|item| @blk.call(item.flatten)}
         return 
       end
       # puts "routing #{item.item.inspect} from #{item.source_name}"

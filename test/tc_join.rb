@@ -6,7 +6,7 @@ class TestJoins < Test::Unit::TestCase
      r = Crocus::PushElement.new('r', 2, [])
      s = Crocus::PushElement.new('s', 2, [])
      j = Crocus::PushSHJoin.new('j', 4, [r,s], [[0],[1]]) do |i|
-       outs << i.flatten
+       outs << i
      end
      r.set_block {|i| j.insert(i,r)}
      s.set_block {|i| j.insert(i,s)}
@@ -25,12 +25,12 @@ class TestJoins < Test::Unit::TestCase
      t = Crocus::PushElement.new('t', 2, [])
      j1 = Crocus::PushSHJoin.new('j1', 4, [r,s], [[0],[0]])
      j2 = Crocus::PushSHJoin.new('j2', 6, [j1, t], [[2],[0]]) do |i|
-       outs << i.flatten
+       outs << i
      end
      r.set_block{|i| j1.insert(i,r)}
      s.set_block{|i| j1.insert(i,s)}
      t.set_block{|i| j2.insert(i,t)}
-     j1.set_block{|i| j2.insert(i.flatten,j1)}
+     j1.set_block{|i| j2.insert(i,j1)}
      
      r.insert([1,:a])
      s.insert([1,:b])
@@ -49,7 +49,7 @@ class TestJoins < Test::Unit::TestCase
      link = Crocus::PushElement.new('link', 2, [])
      path = Crocus::PushElement.new('path', 2, [])
      j = Crocus::PushSHJoin.new('jpath', 4, [link,path], [[1],[0]]) do |i|
-       tup = [i[0][0], i[1][1]]
+       tup = [i[0], i[3]]
        unless outs.include? tup
          outs << tup
          path << tup

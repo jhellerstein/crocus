@@ -27,7 +27,7 @@ class Crocus
         @aggpairs.each_with_index do |ap, agg_ix|
           grp << ap[0].send(:final, grps[agg_ix])
         end
-        @blk.call(grp)
+        @blk.call(grp.flatten)
       end
     end
   end
