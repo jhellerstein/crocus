@@ -2,15 +2,15 @@ require 'crocus/elements'
 
 class Crocus
   class PushSHJoin < PushElement
-    def initialize(name, sources_in, keys_in, &blk)
+    def initialize(name, arity, sources_in, keys_in, &blk)
+      super(name, arity, *sources_in, &blk)
       @items = [{}, {}]
-      @sources = sources_in.map{|s| s.name}
+      @source_names = sources_in.map{|s| s.name}
       @keys = keys_in
-      super(name, arity, [], &blk)
     end
   
     def insert(item, source)
-      offset = (@sources[0] == source.name) ? 0 : ((@sources[1] == source.name) ? 1 : nil)
+      offset = (@source_names[0] == source.name) ? 0 : ((@source_names[1] == source.name) ? 1 : nil)
       raise "item #{item} inserted into join from unknown source #{source.name}" if offset.nil?
       key = @keys[offset].map{|k| item[k]}
       #build

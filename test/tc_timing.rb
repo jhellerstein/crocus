@@ -12,7 +12,22 @@ class TestTiming < Test::Unit::TestCase
     puts "1M pulls: #{t2-t1} elapsed"
   end
   
-  def test_push_time
+  def test_1_hash_array_insertion
+    h = {}
+    t1 = Time.now
+    (0..1000000).each{|i| h[[i]] = [i,:a]}
+    t2 = Time.now
+    puts "1M hash(array) insertions: #{t2-t1} elapsed" 
+  end
+  def test_1_hash_int_insertion
+    h = {}
+    t1 = Time.now
+    (0..1000000).each{|i| h[i] = [i,:a]}
+    t2 = Time.now
+    puts "1M hash(int) insertions: #{t2-t1} elapsed" 
+  end
+  
+  def test_0_push_time
     p = Crocus::PushElement.new('p', 1, []) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
@@ -29,7 +44,7 @@ class TestTiming < Test::Unit::TestCase
   
   def test_unary_eddy_time
     r = Crocus::PushElement.new('r', 1, [])
-    e = Crocus::PushEddy.new([r], []) do |inp|
+    e = Crocus::PushEddy.new('e', 1, [r], []) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else
@@ -45,7 +60,7 @@ class TestTiming < Test::Unit::TestCase
   def test_binary_eddy_time
     r = Crocus::PushElement.new('r', 1, [])
     s = Crocus::PushElement.new('s', 1, [])
-    e = Crocus::PushEddy.new([r,s], [[[r, [0]], [s, [0]]]]) do |inp|
+    e = Crocus::PushEddy.new('e', 2, [r,s], [[[r, [0]], [s, [0]]]]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else
@@ -62,7 +77,7 @@ class TestTiming < Test::Unit::TestCase
   def test_binary_join_time
     r = Crocus::PushElement.new('r', 1, [])
     s = Crocus::PushElement.new('s', 1, [])
-    j = Crocus::PushSHJoin.new('j', [r,s], [[0],[0]]) do |inp|
+    j = Crocus::PushSHJoin.new('j', 2, [r,s], [[0],[0]]) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         [inp[0]*2] 
       else
@@ -79,19 +94,23 @@ class TestTiming < Test::Unit::TestCase
     puts "1M binary symmetric join pushes: #{t2-t1} elapsed"
   end
   
-  def test_hash_array_insertion
-    h = {}
+  def test_group_time
+    p = Crocus::PushElement.new('p', 1, []) 
+    g = Crocus::PushGroup.new('g', 1, [p], [0], [[Crocus::Count.new, 0]]) do |inp|
+      unless inp.nil?
+        if inp[0].class <= Numeric and inp[0]%2 == 0
+          [inp[0]*2] 
+        else
+          [-1]
+        end
+      end
+    end
+    p.set_block {|i| g << i unless i.nil?}
     t1 = Time.now
-    (0..1000000).each{|i| h[[i]] = [i,:a]}
+    (0..1000000).each {|i| p.insert([i])}
+    p.flush
     t2 = Time.now
-    puts "1M hash(array) insertions: #{t2-t1} elapsed" 
-  end
-  def test_hash_int_insertion
-    h = {}
-    t1 = Time.now
-    (0..1000000).each{|i| h[i] = [i,:a]}
-    t2 = Time.now
-    puts "1M hash(int) insertions: #{t2-t1} elapsed" 
+    puts "1M group pushes: #{t2-t1} elapsed"
   end
 end
     
