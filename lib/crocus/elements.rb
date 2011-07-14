@@ -57,7 +57,7 @@ class Crocus
       @blk = lambda{|i| @outputs.each{|o| o.insert(i,self)}}
     end
     def insert(item, source=nil)
-      raise "PushElement #{@name} has no block" if @blk.nil?
+      raise "no output specified for PushElement #{@name}" if @blk.nil?
       @blk.call(item) unless item.nil? or item == []
     end
     def <<(i)

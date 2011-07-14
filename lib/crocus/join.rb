@@ -11,7 +11,7 @@ class Crocus
       @keys = keys_in
       @sources_ended = Set.new
     end
-  
+    
     def insert(item, source)
       offset = (@source_names[0] == source.name) ? 0 : ((@source_names[1] == source.name) ? 1 : nil)
       raise "item #{item} inserted into join from unknown source #{source.name}" if offset.nil?
