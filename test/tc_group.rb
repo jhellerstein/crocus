@@ -3,8 +3,8 @@ require './test_common.rb'
 class TestGroupBy < Test::Unit::TestCase
   def test_group_by
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    g = Crocus::PushGroup.new('g', 2, [r], [1], [[Crocus::Sum.new, 0]]) do |i|
+    r = Crocus::PushElement.new('r', 2)
+    g = Crocus::PushGroup.new('g', 2, [1], [[Crocus::Sum.new, 0]]) do |i|
       outs << i unless i.nil?
     end
     r.wire_to(g)
@@ -17,8 +17,8 @@ class TestGroupBy < Test::Unit::TestCase
   
   def test_agg_nogroup
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    g = Crocus::PushGroup.new('g', 1, [r], nil, [[Crocus::Sum.new, 0]]) do |i|
+    r = Crocus::PushElement.new('r', 2)
+    g = Crocus::PushGroup.new('g', 1, nil, [[Crocus::Sum.new, 0]]) do |i|
       outs << i unless i.nil?
     end
     r.wire_to(g)
@@ -31,8 +31,8 @@ class TestGroupBy < Test::Unit::TestCase
       
   def test_argagg
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    g = Crocus::PushArgAgg.new('g', 2, [r], [1], [[Crocus::Min.new, 0]]) do |i|
+    r = Crocus::PushElement.new('r', 2)
+    g = Crocus::PushArgAgg.new('g', 2, [1], [[Crocus::Min.new, 0]]) do |i|
       outs << i unless i.nil?
     end
     r.wire_to(g)
@@ -45,8 +45,8 @@ class TestGroupBy < Test::Unit::TestCase
   
   def test_argagg_nogroup
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    g = Crocus::PushArgAgg.new('g', 2, [r], nil, [[Crocus::Min.new, 0]]) do |i|
+    r = Crocus::PushElement.new('r', 2)
+    g = Crocus::PushArgAgg.new('g', 2, nil, [[Crocus::Min.new, 0]]) do |i|
       outs << i unless i.nil?
     end
     r.wire_to(g)

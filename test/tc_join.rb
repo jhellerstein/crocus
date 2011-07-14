@@ -3,8 +3,8 @@ require './test_common.rb'
 class TestJoins < Test::Unit::TestCase
   def test_PushSHJoin
      outs = []
-     r = Crocus::PushElement.new('r', 2, [])
-     s = Crocus::PushElement.new('s', 2, [])
+     r = Crocus::PushElement.new('r', 2)
+     s = Crocus::PushElement.new('s', 2)
      j = Crocus::PushSHJoin.new('j', 4, [r,s], [[0],[1]]) do |i|
        outs << i
      end
@@ -20,9 +20,9 @@ class TestJoins < Test::Unit::TestCase
    
    def test_two_joins
      outs = []
-     r = Crocus::PushElement.new('r', 2, [])
-     s = Crocus::PushElement.new('s', 2, [])
-     t = Crocus::PushElement.new('t', 2, [])
+     r = Crocus::PushElement.new('r', 2)
+     s = Crocus::PushElement.new('s', 2)
+     t = Crocus::PushElement.new('t', 2)
      j1 = Crocus::PushSHJoin.new('j1', 4, [r,s], [[0],[0]])
      j2 = Crocus::PushSHJoin.new('j2', 6, [j1, t], [[2],[0]]) do |i|
        outs << i
@@ -46,8 +46,8 @@ class TestJoins < Test::Unit::TestCase
    def test_recursion
      outs = Set.new
      links = Set.new
-     link = Crocus::PushElement.new('link', 2, [])
-     path = Crocus::PushElement.new('path', 2, [])
+     link = Crocus::PushElement.new('link', 2)
+     path = Crocus::PushElement.new('path', 2)
      j = Crocus::PushSHJoin.new('jpath', 4, [link,path], [[1],[0]]) do |i|
        tup = [i[0], i[3]]
        unless outs.include? tup

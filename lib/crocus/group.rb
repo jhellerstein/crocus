@@ -2,8 +2,8 @@ require 'crocus/elements'
 
 class Crocus
   class PushGroup < PushElement
-    def initialize(name, arity, inputs_in, keys_in, aggpairs_in, &blk)
-      super(name, arity, *inputs_in, &blk)
+    def initialize(name, arity, keys_in, aggpairs_in, &blk)
+      super(name, arity, &blk)
       @groups = {}
       @keys = keys_in
       @keys = [] if keys_in.nil?
@@ -34,9 +34,9 @@ class Crocus
   end
   
   class PushArgAgg < PushGroup
-    def initialize(name, arity, inputs_in, keys_in, aggpairs_in, &blk)
+    def initialize(name, arity, keys_in, aggpairs_in, &blk)
       raise "Multiple aggpairs #{aggpairs_in.map{|a| a.class.name}} in ArgAgg; only one allowed" if aggpairs_in.length > 1
-      super(name, arity, inputs_in, keys_in, aggpairs_in, &blk)
+      super(name, arity, keys_in, aggpairs_in, &blk)
       @agg = @aggpairs[0][0]
       @aggcol = @aggpairs[0][1]
       @winners = {}

@@ -11,7 +11,7 @@ class TestElements < Test::Unit::TestCase
   
   def test_push_element
     results = []
-    p = Crocus::PushElement.new(:r,0,[]) do |inp|
+    p = Crocus::PushElement.new(:r,0) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         results << [inp[0]*2] 
       else
@@ -34,8 +34,8 @@ class TestElements < Test::Unit::TestCase
   
   def test_push_pair
     results = []
-    p = Crocus::PushElement.new(:p,0,[])
-    q = Crocus::PushElement.new(:q,0,[]) do |inp|
+    p = Crocus::PushElement.new(:p,0)
+    q = Crocus::PushElement.new(:q,0) do |inp|
       if inp[0].class <= Numeric and inp[0]%2 == 0
         results << [inp[0]*2] 
       else

@@ -4,7 +4,7 @@ class TestEddies < Test::Unit::TestCase
   # baseline: an eddy on only one source
   def test_unary
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
+    r = Crocus::PushElement.new('r', 2)
     e = Crocus::PushEddy.new('e1', 2, [r], []) do |i|
       outs << i
     end
@@ -17,8 +17,8 @@ class TestEddies < Test::Unit::TestCase
   # simple symmetric hash join
   def test_binary_join
      outs = []
-     r = Crocus::PushElement.new('r', 2, [])
-     s = Crocus::PushElement.new('s', 2, [])
+     r = Crocus::PushElement.new('r', 2)
+     s = Crocus::PushElement.new('s', 2)
      e = Crocus::PushEddy.new('e1', 4, [r,s], [[[r, [0]], [s, [1]]]]) do |i|
        outs << i
      end
@@ -36,9 +36,9 @@ class TestEddies < Test::Unit::TestCase
    # XXX maybe differentiate (name,instance) of input elements rather than requiring differently-named elements?
    def test_self_join
      outs = []
-     r = Crocus::PushElement.new("r", 2, [])
-     r1 = Crocus::PushElement.new("r1", 2, [r])
-     r2 = Crocus::PushElement.new("r2", 2, [r])
+     r = Crocus::PushElement.new("r", 2)
+     r1 = Crocus::PushElement.new("r1", 2)
+     r2 = Crocus::PushElement.new("r2", 2)
      e = Crocus::PushEddy.new('e1', 4, [r1,r2], [[[r1, [0]], [r2, [0]]]]) do |i|
        outs << i
      end
@@ -56,8 +56,8 @@ class TestEddies < Test::Unit::TestCase
    def test_cross_product
      count = 0
      outs = []
-     r = Crocus::PushElement.new('r', 2, [])
-     s = Crocus::PushElement.new('s', 2, [])
+     r = Crocus::PushElement.new('r', 2)
+     s = Crocus::PushElement.new('s', 2)
      e = Crocus::PushEddy.new('e1', 4, [r,s], []) do |i|
        outs << i
      end
@@ -74,9 +74,9 @@ class TestEddies < Test::Unit::TestCase
   # simple 3-way equijoin (r*s*t) with potential cartesian product between r and t
   def test_ternary_join
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    s = Crocus::PushElement.new('s', 2, [])
-    t = Crocus::PushElement.new('t', 2, [])
+    r = Crocus::PushElement.new('r', 2)
+    s = Crocus::PushElement.new('s', 2)
+    t = Crocus::PushElement.new('t', 2)
     e = Crocus::PushEddy.new('e1', 6, [r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]]]) do |i|
       outs << i
     end
@@ -96,8 +96,8 @@ class TestEddies < Test::Unit::TestCase
   # join predicates with multiple matching columns
   def test_multicolumn_join_preds
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    s = Crocus::PushElement.new('s', 2, [])
+    r = Crocus::PushElement.new('r', 2)
+    s = Crocus::PushElement.new('s', 2)
     e = Crocus::PushEddy.new('e', 4, [r,s], [[[r, [0,1]], [s, [1,0]]]]) do |i|
       outs << i unless i.nil?
     end
@@ -118,8 +118,8 @@ class TestEddies < Test::Unit::TestCase
   # XXX would be nice if engine optimized to the previous
   def test_multiple_join_preds
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    s = Crocus::PushElement.new('s', 2, [])
+    r = Crocus::PushElement.new('r', 2)
+    s = Crocus::PushElement.new('s', 2)
     e = Crocus::PushEddy.new('e', 4, [r,s], [[[r, [0]], [s, [1]]], [[r,[1]], [s,[0]]]]) do |i|
       outs << i unless i.nil?
     end
@@ -138,9 +138,9 @@ class TestEddies < Test::Unit::TestCase
   # cyclic join preds, which require multiple stems on the same source
   def test_cyclic_query
     outs = []
-    r = Crocus::PushElement.new('r', 2, [])
-    s = Crocus::PushElement.new('s', 2, [])
-    t = Crocus::PushElement.new('t', 2, [])
+    r = Crocus::PushElement.new('r', 2)
+    s = Crocus::PushElement.new('s', 2)
+    t = Crocus::PushElement.new('t', 2)
     e = Crocus::PushEddy.new('e', 6, [r,s,t], [[[r, [0]], [s, [0]]], [[s, [0]], [t, [0]]], [[t,[0]], [r, [0]]]]) do |i|
       outs << i
     end
@@ -161,8 +161,8 @@ class TestEddies < Test::Unit::TestCase
   def test_eddy_recursion
     outs = Set.new
     links = Set.new
-    link = Crocus::PushElement.new('link', 2, [])
-    path = Crocus::PushElement.new('path', 2, [])
+    link = Crocus::PushElement.new('link', 2)
+    path = Crocus::PushElement.new('path', 2)
     j = Crocus::PushEddy.new('e', 2, [link,path], [[[link,[1]],[path,[0]]]]) do |i|
       tup = [i[0], i[3]]
       unless outs.include? tup

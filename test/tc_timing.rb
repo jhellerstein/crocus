@@ -41,7 +41,7 @@ class TestTiming < Test::Unit::TestCase
   
   def test_0_push_time
     print "1M pushes: "
-    p = Crocus::PushElement.new('p', 1, []) do |inp|
+    p = Crocus::PushElement.new('p', 1) do |inp|
       process_item(inp)
     end
     t1 = Time.now
@@ -53,7 +53,7 @@ class TestTiming < Test::Unit::TestCase
   
   def test_unary_eddy_time
     print "1M unary eddy pushes: "
-    r = Crocus::PushElement.new('r', 1, [])
+    r = Crocus::PushElement.new('r', 1)
     e = Crocus::PushEddy.new('e', 1, [r], []) do |inp|
       process_item(inp)
     end
@@ -65,8 +65,8 @@ class TestTiming < Test::Unit::TestCase
   end
   def test_binary_eddy_time
     print "1M binary join eddy pushes: "
-    r = Crocus::PushElement.new('r', 1, [])
-    s = Crocus::PushElement.new('s', 1, [])
+    r = Crocus::PushElement.new('r', 1)
+    s = Crocus::PushElement.new('s', 1)
     e = Crocus::PushEddy.new('e', 2, [r,s], [[[r, [0]], [s, [0]]]]) do |inp|
       process_item(inp)  
     end
@@ -79,9 +79,9 @@ class TestTiming < Test::Unit::TestCase
   
   def test_binary_join_time
     print "1M binary symmetric join pushes: "
-    r = Crocus::PushElement.new('r', 1, [])
-    s = Crocus::PushElement.new('s', 1, [])
-    j = Crocus::PushSHJoin.new('j', 2, [r,s], [[0],[0]]) do |inp|
+    r = Crocus::PushElement.new('r', 1)
+    s = Crocus::PushElement.new('s', 1)
+    j = Crocus::PushSHJoin.new('j', 2, [[0],[0]]) do |inp|
       process_item(inp)
     end
     r.wire_to(j)
@@ -96,8 +96,8 @@ class TestTiming < Test::Unit::TestCase
   
   def test_group_time
     print "1M group pushes: "
-    p = Crocus::PushElement.new('p', 1, []) 
-    g = Crocus::PushGroup.new('g', 1, [p], nil, [[Crocus::Count.new, 0]]) do |inp|
+    p = Crocus::PushElement.new('p', 1) 
+    g = Crocus::PushGroup.new('g', 1, nil, [[Crocus::Count.new, 0]]) do |inp|
       process_item(inp)
     end
     p.wire_to(g)

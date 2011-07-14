@@ -4,7 +4,7 @@ require 'set'
 class Crocus
   class PushSHJoin < PushElement
     def initialize(name, arity, sources_in, keys_in, &blk)
-      super(name, arity, *sources_in, &blk)
+      super(name, arity, &blk)
       @items = [{}, {}]
       @source_names = sources_in.map{|s| s.name}
       @input_bufs = [[],[]]

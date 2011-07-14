@@ -1,6 +1,6 @@
 require './test_common'
-r = Crocus::PushElement.new('r', 1, [])
-s = Crocus::PushElement.new('s', 1, [])
+r = Crocus::PushElement.new('r', 1)
+s = Crocus::PushElement.new('s', 1)
 e = Crocus::PushEddy.new('e', 2, [r,s], [[[r, [0]], [s, [0]]]]) do |inp|
   if inp[0].class <= Numeric and inp[0]%2 == 0
     [inp[0]*2] 

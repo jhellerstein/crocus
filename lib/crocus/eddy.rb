@@ -34,7 +34,7 @@ class Crocus
       @my_id = my_id_in
       @my_bit = 2**@my_id
       @source_id = source_id_in
-      super(name, arity, [eddy], &blk)
+      super(name, arity, &blk)
     end
     
     def insert(itemset, source)      
@@ -85,8 +85,9 @@ class Crocus
     attr_accessor :curid
     # innies is an array of PushElements that push back to the Eddy
     # preds is an array of attribute pairs of the form [[push_elem, key], [push_elem, key]]
-    def initialize(name, arity, innies, preds, &blk)
-      super(name, arity, *innies, &blk)    
+    def initialize(name, arity, inputs, preds, &blk)
+      super(name, arity, &blk)  
+      @inputs = inputs  
       @elements = []
       @preds = preds
       @stems = []

@@ -44,10 +44,9 @@ class Crocus
   # p.insert(nil)
   class PushElement
     attr_reader :name, :arity, :inputs
-    def initialize(name, arity, *innies, &blk)
+    def initialize(name, arity, &blk)
       @name = name
       @arity = arity
-      @inputs = innies
       @blk = blk
     end
     def set_block(&blk)
