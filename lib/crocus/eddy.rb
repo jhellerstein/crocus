@@ -13,7 +13,7 @@ class Crocus
       @ready = 0
       # ready to route to matching elements
       matching_elements.each do |element|
-        @ready += 2**element.my_id
+        @ready += 2**element.eddy_element_id
       end
       @element_mask = @ready
       @done = 0
@@ -24,21 +24,23 @@ class Crocus
   end
 
   class PushEddy < PushElement
-    attr_reader :name_to_source_id, :all_on, :init_ready, :input_bufs
+    attr_reader :name_to_source_id, :all_on, :init_ready, :input_bufs, :inputs
     attr_accessor :curid
     # innies is an array of PushElements that push back to the Eddy
     # preds is an array of attribute pairs of the form [[push_elem, key], [push_elem, key]]
     def initialize(name, arity, inputs, preds, &blk)
       super(name, arity, &blk)  
-      @inputs = inputs  
+      @inputs = inputs 
       @preds = preds
       @elements = []
       @name_to_source_id = {}
-      @cur_source_id = 0
       @ids = (0..@inputs.length-1) # precompute this outside the insert path!
       @all_on = 0
       @sources_ended = Set.new
+      @source_id_to_elements = {}
 
+      inputs.each_with_index {|inp,i| @name_to_source_id[inp.name] = i}
+        
       counts = @inputs.reduce({}) do |memo,i|
         memo[i.name] ||= 0
         memo[i.name] += 1
@@ -51,7 +53,12 @@ class Crocus
       # set up a buffer for each input
       (0..@inputs.length-1).each {|i| input_bufs[i] = []}
       construct_elements
-    end   
+      (0..@elements.length-1).each{|i| @all_on += 2**i}
+    end
+    
+    def initial_ready_elements(source_id)
+      @source_id_to_elements[source_id]
+    end
 
     def local_flush
       found = true
@@ -68,7 +75,7 @@ class Crocus
 
 
     def flush_buf(buf, source, source_id)
-      itemset = EddyItemSet.new(buf, source.name, source_id, initial_bits(source_id))
+      itemset = EddyItemSet.new(buf, source.name, source_id, initial_ready_elements(source_id))
       @input_bufs[source_id] = []
       # puts "created EddyItem #{item.inspect}"
       # and route
@@ -118,8 +125,6 @@ class Crocus
     end  
     # these need to be defined in a subclass
     # def construct_elements
-    # end
-    # def initial_bits
     # end
     # def choose_route
     # end

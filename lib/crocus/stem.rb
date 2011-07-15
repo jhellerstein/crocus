@@ -2,14 +2,14 @@ require 'crocus/bits'
 require 'crocus/elements'
 class Crocus
   class Stem < PushElement
-    attr_reader :insert_key, :lookup_key, :my_id, :my_bit
-    def initialize(name, my_id_in, source_id_in, arity, insert_key_in, lookup_key_in, eddy, &blk)
+    attr_reader :insert_key, :lookup_key, :eddy_element_id, :eddy_element_bit
+    def initialize(name, eddy_element_id_in, source_id_in, arity, insert_key_in, lookup_key_in, eddy, &blk)
       @items = {}
       @insert_key = insert_key_in
       @lookup_key = lookup_key_in
       @eddy = eddy
-      @my_id = my_id_in
-      @my_bit = 2**@my_id
+      @eddy_element_id = eddy_element_id_in
+      @eddy_element_bit = 2**@eddy_element_id
       @source_id = source_id_in
       super(name, arity, &blk)
     end
@@ -48,6 +48,7 @@ class Crocus
           end
         end 
         itemset.items = newitems
+        itemset.source_id = -1
         @blk.call(itemset)
       end
     end
@@ -60,8 +61,8 @@ class Crocus
   class PushStemEddy < PushEddy
     attr_reader :stem_id_to_pair_bit
     def construct_elements
-      @stems = []
-      @source_id_to_stems = {}
+      @elements = []
+      @source_id_to_elements = {}
       @stem_id_to_pair_bit = {}
       inputs_left = {}
       @inputs.map{|inp| (inputs_left[inp.name] ||= []) << inp }
@@ -82,27 +83,20 @@ class Crocus
           register_stem(i.name, i.arity, nil, nil) # empty key will hash all entries together on nil
         end
       end 
-      @elements = @stems 
     end   
     
     def register_stem(name, arity, insert_key, lookup_key)
       # XXX Check for redunant Stems?
       # return if @name_to_id[name]
-      source_id = (@name_to_source_id[name] ||= @cur_source_id)
-      @cur_source_id += 1 if source_id == @cur_source_id
-      stem_id = @stems.length
+      source_id = @name_to_source_id[name]
+      stem_id = @elements.length
       # puts "registering Stem #{stem_id} for #{name}[#{insert_key}]"
       newstem = Stem.new(name,stem_id,source_id,arity,insert_key,lookup_key,self) do |item|
         self.route(item)
       end
-      @stems << newstem
-      (@source_id_to_stems[source_id] ||= []) << newstem
-      @all_on += 2**stem_id
+      @elements << newstem
+      (@source_id_to_elements[source_id] ||= []) << newstem
       return stem_id
-    end
-    
-    def initial_bits(source_id)
-      @source_id_to_stems[source_id]
     end
     
     def choose_route(itemset)
@@ -117,21 +111,14 @@ class Crocus
         i = Crocus.highest_bit(itemset.ready)
       end
       raise "out of readies" if i < 0
-      n = @stems[i]
-      # @ids.each do |i| 
-      #   if itemset.ready & 2**i != 0
-      #     n = @stems[i][0]
-      #     raise "n is nil, #{@id_to_name[i]}" if n.nil?
-      #     break
-      #   end
-      # end
+      n = @elements[i]
       # flip the bits to what they should be AFTER this insert
-      itemset.ready -= n.my_bit
-      pair_bit = stem_id_to_pair_bit[n.my_id]
+      itemset.ready -= n.eddy_element_bit
+      pair_bit = stem_id_to_pair_bit[n.eddy_element_id]
       unless pair_bit.nil?
         itemset.ready += pair_bit if (itemset.ready & pair_bit == 0) and (itemset.done & pair_bit == 0)
       end
-      itemset.done += n.my_bit 
+      itemset.done += n.eddy_element_bit 
       return n
     end    
   end

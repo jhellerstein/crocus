@@ -1,5 +1,6 @@
 require './test_common.rb'
 require 'crocus/stem'
+require 'crocus/joineddy'
 
 class TestTiming < Test::Unit::TestCase
   def process_item(inp)
@@ -66,7 +67,7 @@ class TestTiming < Test::Unit::TestCase
     puts "#{t2-t1} elapsed" 
   end
   def test_binary_eddy_time
-    print "1M binary join eddy pushes: "
+    print "1M binary join StemEddy pushes: "
     r = Crocus::PushElement.new('r', 1)
     s = Crocus::PushElement.new('s', 1)
     e = Crocus::PushStemEddy.new('e', 2, [r,s], [[[r, [0]], [s, [0]]]]) do |inp|
@@ -96,6 +97,22 @@ class TestTiming < Test::Unit::TestCase
     t2 = Time.now
 
     puts "#{t2-t1} elapsed"
+  end
+  
+  def test_binary_join_eddy_time
+    print "1M binary join JoinEddy pushes: "
+    r = Crocus::PushElement.new('r', 1)
+    s = Crocus::PushElement.new('s', 1)
+    e = Crocus::PushJoinEddy.new('e', 2, [r,s], [[[r, [0]], [s, [0]]]]) do |inp|
+      process_item(inp)  
+    end
+    r.wire_to(e)
+    s.wire_to(e)
+    t1 = Time.now
+    (0..500000).each{|i| r.insert([i,:a]); s.insert([i, :b])}
+    r.end; s.end
+    t2 = Time.now
+    puts "#{t2-t1} elapsed" 
   end
   
   def test_group_time
