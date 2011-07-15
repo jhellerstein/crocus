@@ -13,14 +13,14 @@ class Crocus
     end
   end
   
-  # wrap a standard symmetric-hash join with EddyItemSet handling
+  # wrap a symmetric-hash join with EddyItemSet handling
   class PushEddySHJoin < PushSHJoin
     def initialize(name, arity, sources_in, keys_in, pred_in, eddy_in, &blk)
       # output block is always absorb_output, which assembles the output content
       raise "can't set block on a PushEddySHJoin" unless blk.nil?
       super(name, arity, sources_in, keys_in)
       set_block {|i| absorb_output(i)}
-      @buf = []
+      @output_buf = []
       @eddy = eddy_in
       @pred = pred_in
       @source_ids = sources_in.map{|s| s.source_id}
@@ -40,7 +40,9 @@ class Crocus
       matches.each do |m|
         # puts "    found match #{m}"
         newitem = item.clone
-        newitem[other_output_offset] = m[other_output_offset]
+        (0..newitem.length-1).each do |i|
+          newitem[i]=m[i] if newitem[i].nil? and not m[i].nil?
+        end
         @blk.call(newitem)
       end unless matches.nil?
     end
@@ -65,11 +67,11 @@ class Crocus
 
     # buffer output until it's big enough
     def absorb_output(item)
-      @buf << item
+      @output_buf << item
     end
    
     def check_pred(itemset)
-      @buf += itemset.items.find_all do |item|
+      @output_buf += itemset.items.find_all do |item|
         # because shims wrap source names in array brackets,
         # need to do same here when calling Array#index
         l_item = item[@source_names.index([@pred[0][0].name])]
@@ -81,9 +83,9 @@ class Crocus
 
     # processing continues with the eddy router
     def flush_output
-      if @buf.size > 0
-        @current_itemset.items = @buf
-        @buf = []
+      if @output_buf.size > 0
+        @current_itemset.items = @output_buf
+        @output_buf = []
         @eddy.route(@current_itemset)
       else
         @eddy.route(nil) 
