@@ -12,6 +12,8 @@ class TestTiming < Test::Unit::TestCase
     end
   end
   
+  # def test_timing_suite
+  
   def dont_test_pull_time
     print "1M pulls: "
     e = Crocus::PullElement.new('p', 0, (1..1000000000))
@@ -127,6 +129,54 @@ class TestTiming < Test::Unit::TestCase
     p.end
     t2 = Time.now
     puts "#{t2-t1} elapsed"
+  end
+  
+  def test_zz_binary_join_EM_time
+    print "1M binary join pushes through EventMachine: "
+
+    halflife = 500000
+    joincount = 0
+
+    engine = Crocus.new(:ip => "127.0.0.1", :port => 5432)
+    r = Crocus::PushElement.new('r', 1)
+    s = Crocus::PushElement.new('s', 1)
+    engine.register_source(r)
+    engine.register_source(s)
+    engine.run_bg
+    j = Crocus::PushSHJoin.new('j', 2, [r,s], [[0],[0]]) do |inp|
+      joincount += 1
+    end
+    r.wire_to(j)
+    s.wire_to(j)
+    t1 = Time.now
+    t2 = nil
+    engine.schedule_and_wait do
+      (0..halflife-1).each do |i| 
+        engine.dsock.send_datagram(['r', [i]].to_msgpack, engine.ip, engine.port)
+        engine.dsock.send_datagram(['s', [i]].to_msgpack, engine.ip, engine.port)
+      end
+    end
+    loop do
+      # print "running "
+      # prog = Crocus::PushElement.count*40 / (2*halflife)
+      # prog.times {print "="}
+      # pct = prog*100/40
+      # print pct
+      # spc = (pct / 10 == 0) ? 1 : (pct < 10 ? 2 : 3)
+      # (40-(prog+spc)).times {print "-"} unless pct > 99
+      # print "\r"
+      # $stdout.flush
+
+      if Crocus::PushElement.count >= 2*halflife - 10
+        r.end; s.end
+        t2 = Time.now
+        break
+      end
+      sleep 1
+    end
+    # puts "inserted #{Crocus::PushElement.count} items"
+    # puts "produced #{joincount} items"
+    puts "~ #{(t2-t1)} elapsed" 
   end
 end
     

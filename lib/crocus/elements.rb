@@ -43,11 +43,19 @@ class Crocus
   # p.insert(1)
   # p.insert(nil)
   class PushElement
+    @@count = 0
+    
     attr_reader :name, :arity, :inputs
     def initialize(name, arity, &blk)
       @name = name
       @arity = arity
       @blk = blk
+    end
+    def self.count
+      @@count
+    end
+    def self.reset_count
+      @@count=0
     end
     def set_block(&blk)
       @blk = blk
@@ -58,6 +66,8 @@ class Crocus
     end
     def insert(item, source=nil)
       raise "no output specified for PushElement #{@name}" if @blk.nil?
+      # puts "inserting #{item.inspect}"
+      @@count += 1
       @blk.call(item) unless item.nil? or item == []
     end
     def <<(i)
