@@ -62,7 +62,8 @@ class Crocus
       @blk = blk
     end
     def wire_to(element)
-      (@outputs ||= []) << element
+      raise "attempt to wire_to non-PushElement" unless element.class <= PushElement
+      @outputs << element
     end
     def insert(item, source=nil)
       push_out(item)
@@ -85,7 +86,7 @@ class Crocus
       if @flushing.nil?
         @flushing = true
         local_flush
-        @outputs.each {|o| o.flush} if @outputs
+        @outputs.each {|o| o.flush}
       end
       @flushing = nil
     end
@@ -99,7 +100,7 @@ class Crocus
         @ended = true
         flush
         if local_end(source)
-          @outputs.each {|o| o.end(self)} if @outputs
+          @outputs.each {|o| o.end(self)}
         end
       end
     end
@@ -108,4 +109,15 @@ class Crocus
     end
     undef to_enum
   end  
+  
+  class ScannerElement < PushElement
+    def initialize(name, arity, collection_in, &blk)
+      super(name,arity)
+      @collection = collection_in
+    end
+    def insert(item, source=nil)
+      # puts "scanner #{name} beginning push"
+      @collection.each {|item| push_out(item)}
+    end
+  end
 end

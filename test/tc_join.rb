@@ -5,8 +5,8 @@ class TestJoins < Test::Unit::TestCase
      outs = []
      r = Crocus::PushElement.new('r', 2)
      s = Crocus::PushElement.new('s', 2)
-     j = Crocus::PushSHJoin.new('j', 4, [r,s], [[0],[1]]) do |i|
-       outs << i
+     j = Crocus::PushSHJoin.new('j', 4, [r,s], [[0],[1]]) do |i,j|
+       outs << [i,j]
      end
      r.wire_to(j)
      s.wire_to(j)
@@ -15,7 +15,7 @@ class TestJoins < Test::Unit::TestCase
      r.insert([2,:c])
      s.insert([:d,2])
      r.end; s.end
-     assert_equal([[1, :a, :b, 1],[2, :c, :d, 2]], outs.sort)      
+     assert_equal([[[1, :a], [:b, 1]],[[2, :c], [:d, 2]]], outs.sort)      
    end
    
    def test_two_joins
@@ -23,9 +23,11 @@ class TestJoins < Test::Unit::TestCase
      r = Crocus::PushElement.new('r', 2)
      s = Crocus::PushElement.new('s', 2)
      t = Crocus::PushElement.new('t', 2)
-     j1 = Crocus::PushSHJoin.new('j1', 4, [r,s], [[0],[0]])
-     j2 = Crocus::PushSHJoin.new('j2', 6, [j1, t], [[2],[0]]) do |i|
-       outs << i
+     j1 = Crocus::PushSHJoin.new('j1', 4, [r,s], [[0],[0]]) do |i,j|
+       i+j
+     end
+     j2 = Crocus::PushSHJoin.new('j2', 6, [j1, t], [[2],[0]]) do |i,j|
+       outs << i+j
      end
      r.wire_to(j1)
      s.wire_to(j1)
@@ -48,8 +50,8 @@ class TestJoins < Test::Unit::TestCase
      links = Set.new
      link = Crocus::PushElement.new('link', 2)
      path = Crocus::PushElement.new('path', 2)
-     j = Crocus::PushSHJoin.new('jpath', 4, [link,path], [[1],[0]]) do |i|
-       tup = [i[0], i[3]]
+     j = Crocus::PushSHJoin.new('jpath', 4, [link,path], [[1],[0]]) do |i,j|
+       tup = [i[0], j[1]]
        unless outs.include? tup
          outs << tup
          path << tup

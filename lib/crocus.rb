@@ -10,14 +10,31 @@ require 'crocus/join'
 require 'crocus/server'
 
 class Crocus
-  attr_accessor :ip, :port, :dsock, :sources, :options
+  attr_accessor :ip, :port, :dsock
+  attr_reader :sources, :scanners, :collections, :options, :stratum_first_iter
   def initialize(options={})
     @options = options.clone
     @ip = @options[:ip]
     @options[:port] ||= 0
     @options[:port] = @options[:port].to_i
     @sources = {}
+    @collections = {}
+    @scanners = {}
     PushElement.reset_count
+    @stratum_first_iter = true
+  end
+  
+  def tick
+    @collections.each do |name, c| 
+      c.tick_deltas; c.tick_deltas; c.tick
+    end
+    # and kick off a scan of the collection
+    @scanners.each do |name, sc|
+      sc.insert([])
+    end
+    @sources.each do |name, so|
+      so.flush
+    end
   end
   
   def register_source(s)

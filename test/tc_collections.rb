@@ -4,12 +4,12 @@ require '../lib/crocus/minibloom'
 class TestCollections < Test::Unit::TestCase
   def test_collection
     mb = Crocus.new(:ip=>'localhost', :port=>5432)
-    c = Crocus::Collection.new('c', mb)
+    c = MiniBloom::Collection.new('c', mb)
     exercise_methods(c)
   end
   def test_table
     mb = Crocus.new(:ip=>'localhost', :port=>5432)
-    c = Crocus::Table.new('c', mb, [:key]=>[:val])
+    c = MiniBloom::Table.new('c', mb, {[:key]=>[:val]})
     exercise_methods(c)
   end
   def exercise_methods(c)

@@ -155,34 +155,48 @@ class Crocus
     # project the collection to its key attributes
     public
     def keys
-      self.map{|t| @key_colnums.map {|i| t[i]}}
+      map{|t| @key_colnums.map {|i| t[i]}}
     end
 
     # project the collection to its non-key attributes
     public
     def values
-      self.map{|t| (self.key_cols.length..self.schema.length-1).map{|i| t[i]}}
+      map { |t| (self.key_cols.length..self.schema.length-1).map{|i| t[i]} }
     end
 
     # map each item in the collection into a string, suitable for placement in stdio
     public
     def inspected
-      self.map{|t| [t.inspect]}
+      map{|t| [t.inspect]}
+    end
+
+    public
+    def to_push_elem
+      # if no push source yet, set one up
+      unless @crocus_instance.scanners[tabname]
+        @crocus_instance.scanners[tabname] = Crocus::ScannerElement.new(tabname, schema.length, self)
+        @crocus_instance.sources[tabname] = @crocus_instance.scanners[tabname]
+      end
+      @crocus_instance.sources[tabname]
     end
 
     # akin to map, but modified for efficiency in Bloom statements
     public
     def pro(&blk)
-      if @crocus_instance.stratum_first_iter
-        return map(&blk)
-      else
-        retval = []
-        each_from([@delta]) do |t|
-          newitem = blk.call(t)
-          retval << newitem unless newitem.nil?
-        end
-        return retval
-      end
+      # set up a pro on the matching push source
+      pusher = to_push_elem.pro
+      pusher.set_block(&blk) if blk
+    end
+    
+    public
+    def join(elem2, &blk)
+      the_pro = to_push_elem
+      the_pro.join(elem2, &blk)
+    end
+
+    public
+    def *(elem2, &blk)
+      join(elem2, &blk)
     end
 
     # By default, all tuples in any rhs are in storage or delta. Tuples in

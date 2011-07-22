@@ -40,7 +40,7 @@ class Crocus
         result = [nil,nil]
         result[offset] = item
         result[1-offset] = m
-        push_out(result.flatten)
+        push_out(result)
       end unless matches.nil?
     end
     

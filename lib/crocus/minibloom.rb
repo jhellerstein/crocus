@@ -2,11 +2,40 @@ class MiniBloom < Crocus
   attr_reader :crocus
   def initialize
     @crocus = Crocus.new(:ip => "127.0.0.1", :port => 5432)
+    super
+  end
+  def run_bg
     @crocus.run_bg
   end
   # helper to define instance methods
   def singleton_class # :nodoc: all
     class << self; self; end
+  end
+  private
+  def define_collection(name, &block)
+    # Don't allow duplicate collection definitions
+    if @collections.has_key? name
+      raise "collection already exists: #{name}"
+    end
+
+    # Rule out collection names that use reserved words, including
+    # previously-defined method names.
+    reserved = eval "defined?(#{name})"
+    unless reserved.nil?
+      raise "symbol :#{name} reserved, cannot be used as table name"
+    end
+    self.singleton_class.send(:define_method, name) do |*args, &blk|
+      unless blk.nil? then
+        return @collections[name].pro(&blk)
+      else
+        return @collections[name]
+      end
+    end
+  end
+  public
+  def table(name, schema=nil)
+    define_collection(name)
+    @collections[name] = Crocus::Table.new(name,self,schema)
   end
   def source(name, arity=-1)
     # Don't allow duplicate collection definitions
@@ -45,12 +74,16 @@ class Crocus
       elem.set_block(&blk)
       return elem
     end
-    def *(elem2, &blk)
+    def join(elem2, &blk)
+      elem2 = elem2.to_push_elem unless elem2.class <= PushElement
       join = Crocus::PushSHJoin.new('join'+name+elem2.name+Time.new.tv_usec.to_s, arity+elem2.arity,
                                     [self,elem2], [], &blk)
       self.wire_to(join)
       elem2.wire_to(join)
       return join
+    end
+    def *(elem2, &blk)
+      join(elem2, &blk)
     end
     def merge(source)
       if source.class <= PushElement
@@ -91,9 +124,11 @@ class Crocus
     end
   end
   class PushSHJoin
-    def pairs(preds=[])
+    def pairs(preds=[],&blk)
       keys = preds.map{|x| x.to_a}[0]
       set_keys(keys)
+      set_block(&blk) if blk
+      self
     end
     alias combos pairs
   end
