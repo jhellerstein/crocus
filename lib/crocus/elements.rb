@@ -50,6 +50,7 @@ class Crocus
       @name = name
       @arity = arity
       @blk = blk
+      @outputs = []
     end
     def self.count
       @@count
@@ -62,21 +63,31 @@ class Crocus
     end
     def wire_to(element)
       (@outputs ||= []) << element
-      @blk = lambda{|i| @outputs.each{|o| o.insert(i,self)}}
     end
     def insert(item, source=nil)
-      raise "no output specified for PushElement #{@name}" if @blk.nil?
+      push_out(item)
+    end
+    def push_out(item)
+      raise "no output specified for PushElement #{@name}" if @blk.nil? and @outputs == []
       # puts "inserting #{item.inspect}"
-      @@count += 1
-      @blk.call(item) unless item.nil? or item == []
+      unless item.nil? or item == []
+        @@count += 1
+        out = @blk.nil? ? item : @blk.call(item) 
+        @outputs.each{|o| o.insert(out,self)} unless out.nil?
+      end
     end
     def <<(i)
       insert(i, nil)
     end
     # flushes should always be propagated downstream.  
     def flush
-      local_flush
-      @outputs.each {|o| o.flush} if @outputs
+      # avoid flush cycles via the @flushing flag
+      if @flushing.nil?
+        @flushing = true
+        local_flush
+        @outputs.each {|o| o.flush} if @outputs
+      end
+      @flushing = nil
     end
     # flush should ensure that any deferred inserts are processed.
     # it is *not* a promise of end-of-stream.
@@ -84,13 +95,17 @@ class Crocus
     end
     # ends should be handled carefully
     def end(source=nil)
-      if local_end(source)
-        @outputs.each {|o| o.end(self)} if @outputs
+      if @ended.nil?
+        @ended = true
+        flush
+        if local_end(source)
+          @outputs.each {|o| o.end(self)} if @outputs
+        end
       end
     end
     def local_end(source)
       true
     end
     undef to_enum
-  end
+  end  
 end

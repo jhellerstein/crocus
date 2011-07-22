@@ -28,7 +28,7 @@ class Crocus
     end
     
     def insert_item(item, offset)
-      key = @keys[offset].map{|k| item[k]}
+      key = (@keys.nil? or @keys == []) ? nil : @keys[offset].map{|k| item[k]}
       #build
       # puts "building #{item} into @source[#{offset}] on key #{key}"
       (@items[offset][key] ||= []) << item
@@ -40,7 +40,7 @@ class Crocus
         result = [nil,nil]
         result[offset] = item
         result[1-offset] = m
-        @blk.call(result.flatten)
+        push_out(result.flatten)
       end unless matches.nil?
     end
     

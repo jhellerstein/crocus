@@ -1,3 +1,4 @@
+require './tc_collections.rb'
 require './tc_eddy.rb'
 require './tc_elements.rb'
 require './tc_group.rb'

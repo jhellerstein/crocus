@@ -1,5 +1,3 @@
-require 'test_common.rb'
-
 class MiniBloom < Crocus
   attr_reader :crocus
   def initialize
@@ -42,21 +40,58 @@ end
 class Crocus
   class PushElement
     def pro(&blk)
-      elem = Crocus::PushElement.new('project' + Time.now.to_s, -1)
+      elem = Crocus::PushElement.new('project' + Time.new.tv_usec.to_s, -1)
       self.wire_to(elem)
       elem.set_block(&blk)
       return elem
     end
     def *(elem2, &blk)
-      join = Crocus::PushSHJoin.new('join'+name+elem2.name+Time.now.to_s, arity+elem2.arity,
+      join = Crocus::PushSHJoin.new('join'+name+elem2.name+Time.new.tv_usec.to_s, arity+elem2.arity,
                                     [self,elem2], [], &blk)
       self.wire_to(join)
       elem2.wire_to(join)
       return join
     end
+    def merge(source)
+      if source.class <= PushElement
+        source.wire_to(self)
+      else 
+        source.each{|i| self << i}
+      end
+    end
+    alias <= merge
+    def group(keycols, *aggpairs, &blk)
+      g = Crocus::PushGroup.new('grp'+Time.new.tv_usec.to_s, keycols.length+aggpairs.length, keycols, aggpairs) do |i|
+        blk.call(i)
+      end
+      self.wire_to(g)
+      g
+    end
+    def argagg(keycols, aggpair, &blk)
+      aa = Crocus::PushArgAgg.new('argagg'+Time.new.tv_usec.to_s, arity, keycols, [aggpair], &blk)
+      self.wire_to(aa)
+      return aa
+    end
+    def argmax(gbcols, col, &blk)
+      argagg(gbcols, Crocus::max(col), &blk)
+    end
+    def argmin(gbcols, col, &blk)
+      argagg(gbcols, Crocus::min(col), &blk)
+    end
+    alias on_exists? pro
+    def on_include?(item, &blk)
+      inc = pro{|i| blk.call(item) if i == item and not blk.nil?}
+      wire_to(inc)
+      inc
+    end
+    def inspected
+      ins = Crocus::PushElement.new('inspected'+Time.new.tv_usec.to_s,1) {|i| [i.inspect]}
+      self.wire_to(ins)
+      return ins
+    end
   end
   class PushSHJoin
-    def pairs(preds)
+    def pairs(preds=[])
       keys = preds.map{|x| x.to_a}[0]
       set_keys(keys)
     end

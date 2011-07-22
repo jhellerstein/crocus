@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'eventmachine'
 require 'msgpack'
+require 'crocus/collections'
 require 'crocus/eddy'
 require 'crocus/elements'
 require 'crocus/group'
@@ -9,7 +10,7 @@ require 'crocus/join'
 require 'crocus/server'
 
 class Crocus
-  attr_accessor :ip, :port, :dsock, :sources
+  attr_accessor :ip, :port, :dsock, :sources, :options
   def initialize(options={})
     @options = options.clone
     @ip = @options[:ip]

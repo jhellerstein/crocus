@@ -17,7 +17,7 @@ class Crocus
         agg = @groups[key].nil? ? ap[0].send(:init, agg_input) : ap[0].send(:trans, @groups[key][agg_ix], agg_input)[0]
         @groups[key] ||= Array.new(@aggpairs.length)
         @groups[key][agg_ix] = agg
-        @blk.call(nil)
+        push_out(nil)
       end
     end
     
@@ -27,7 +27,7 @@ class Crocus
         @aggpairs.each_with_index do |ap, agg_ix|
           grp << ap[0].send(:final, grps[agg_ix])
         end
-        @blk.call(grp.flatten)
+        push_out(grp.flatten)
       end
       @groups = {}
     end
@@ -56,7 +56,7 @@ class Crocus
           when :ignore
             # do nothing
           when :replace
-            @winners[key] = [item]
+            @winners[key] = item
           when :keep
             (@winners[key] ||= []) << item
           else
@@ -68,12 +68,12 @@ class Crocus
         end
         @groups[key] ||= Array.new(@aggpairs.length)
         @groups[key][agg_ix] = agg
-        @blk.call(nil)
+        push_out(nil)
       end      
     end 
     
     def local_end(source)
-      @groups.keys.each {|g| @blk.call(@winners[g])}
+      @groups.keys.each {|g| push_out(@winners[g])}
       true
     end
   end
@@ -128,7 +128,7 @@ class Crocus
   end
   # exemplary aggregate method to be used in Bud::BudCollection.group.  
   # computes minimum of x entries aggregated.
-  def min(x)
+  def self.min(x)
     [Min.new, x]
   end
 
@@ -143,7 +143,7 @@ class Crocus
   end
   # exemplary aggregate method to be used in Bud::BudCollection.group.  
   # computes maximum of x entries aggregated.
-  def max(x)
+  def self.max(x)
     [Max.new, x]
   end
 
@@ -162,7 +162,7 @@ class Crocus
 
   # exemplary aggregate method to be used in Bud::BudCollection.group.  
   # arbitrarily but deterministically chooses among x entries being aggregated.
-  def choose(x)
+  def self.choose(x)
     [Choose.new, x]
   end
   
@@ -198,7 +198,7 @@ class Crocus
 
   # exemplary aggregate method to be used in Bud::BudCollection.group.  
   # randomly chooses among x entries being aggregated.
-  def choose_rand(x=nil)
+  def self.choose_rand(x=nil)
     [ChooseRand.new]
   end
 
@@ -210,7 +210,7 @@ class Crocus
   
   # aggregate method to be used in Bud::BudCollection.group.  
   # computes sum of x entries aggregated.
-  def sum(x)
+  def self.sum(x)
     [Sum.new, x]
   end
 
@@ -225,7 +225,7 @@ class Crocus
   
   # aggregate method to be used in Bud::BudCollection.group.  
   # counts number of entries aggregated.  argument is ignored.
-  def count(x=nil)
+  def self.count(x=nil)
     [Count.new]
   end
 
@@ -245,7 +245,7 @@ class Crocus
   
   # aggregate method to be used in Bud::BudCollection.group.  
   # computes average of a multiset of x values
-  def avg(x)
+  def self.avg(x)
     [Avg.new, x]
   end
 
@@ -261,7 +261,7 @@ class Crocus
   
   # aggregate method to be used in Bud::BudCollection.group.  
   # accumulates all x inputs into an array
-  def accum(x)
+  def self.accum(x)
     [Accum.new, x]
   end
 end

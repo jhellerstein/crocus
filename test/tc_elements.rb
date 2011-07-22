@@ -1,4 +1,5 @@
 require './test_common.rb'
+require '../lib/crocus/minibloom'
 
 class TestElements < Test::Unit::TestCase
   def test_pull_element
